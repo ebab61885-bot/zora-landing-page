@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0f15">
+    <meta name="description" content="Zora — Messagerie premium chiffrée de bout en bout. Design sombre élégant, ultra rapide, multi-appareils.">
+    <title>Zora — Premium Messaging</title>
+    <link rel="manifest" id="manifestLink">
+    <style>
+        :root {
+            --bg-color: #0a0f15;
+            --bg-gradient: radial-gradient(circle at 30% 10%, #131e2b, #080c11 90%);
+            --card-bg: rgba(22, 32, 45, 0.75);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text-main: #ffffff;
+            --text-muted: #9aaab9;
+            --accent-blue: #76b9ff;
+            --accent-glow: rgba(118, 185, 255, 0.2);
+            --glow-strong: rgba(118, 185, 255, 0.5);
+            --transition-smooth: cubic-bezier(0.2, 0.9, 0.3, 1);
+            --success: #4ade80;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --font-scale: 1;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f4f7fb;
+            --bg-gradient: radial-gradient(circle at 30% 10%, #ffffff, #e8eef7 90%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text-main: #0a0f15;
+            --text-muted: #5a6b7d;
+            --accent-blue: #2f6fb0;
+            --accent-glow: rgba(47, 111, 176, 0.15);
+            --glow-strong: rgba(47, 111, 176, 0.4);
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        [data-accent="violet"] { --accent-blue: #a78bfa; --glow-strong: rgba(167,139,250,0.5); }
+        [data-accent="green"] { --accent-blue: #4ade80; --glow-strong: rgba(74,222,128,0.5); }
+        [data-accent="pink"] { --accent-blue: #f472b6; --glow-strong: rgba(244,114,182,0.5); }
+        [data-accent="orange"] { --accent-blue: #fb923c; --glow-strong: rgba(251,146,60,0.5); }
+
+        [data-contrast="high"] {
+            --text-muted: #c0ccd8;
+            --card-border: rgba(255,255,255,0.2);
+        }
+        [data-contrast="high"][data-theme="light"] {
+            --text-muted: #1a2530;
+            --card-border: rgba(0,0,0,0.3);
+        }
+
+        [data-reduced-motion="true"] * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; font-size: calc(16px * var(--font-scale)); }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.4s, color 0.4s;
+        }
+
+        /* ============ ANIMATIONS ============ */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        @keyframes floatGlow { 0%,100% { filter: drop-shadow(0 0 5px rgba(118,185,255,0.4)); } 50% { filter: drop-shadow(0 0 20px rgba(118,185,255,0.8)); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 70% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes spinSlow { to { transform: rotate(360deg); } }
+        @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+        @keyframes shimmerProgress { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        @keyframes checkmark { 0% { stroke-dashoffset: 30; } 100% { stroke-dashoffset: 0; } }
+        @keyframes pulseBadge { 0%,100% { box-shadow: 0 0 0 0 rgba(118,185,255,0.4); } 50% { box-shadow: 0 0 0 8px rgba(118,185,255,0); } }
+        @keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        @keyframes wave { 0%,100% { height: 8px; } 50% { height: 24px; } }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .view { display: none; animation: fadeInUp 0.6s var(--transition-smooth) both; }
+        .view.active { display: block; }
+
+        /* ============ PRELOADER ============ */
+        #preloader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: var(--bg-color);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 1.5rem;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .preloader-logo {
+            font-size: 2.4rem; font-weight: 800;
+            letter-spacing: 2px; text-transform: uppercase;
+            background: linear-gradient(130deg, #fff 30%, var(--accent-blue) 80%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: floatGlow 2s infinite;
+        }
+        .preloader-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(118,185,255,0.2);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spinSlow 0.8s linear infinite;
+        }
+
+        /* ============ SCROLL PROGRESS ============ */
+        #scrollProgress {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), #b8d6ff);
+            width: 0%; z-index: 9999;
+            transition: width 0.1s;
+            box-shadow: 0 0 10px var(--glow-strong);
+        }
+
+        /* ============ HEADER ============ */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.2rem 5%; max-width: 1300px; margin: 0 auto;
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+            background: color-mix(in srgb, var(--bg-color) 75%, transparent);
+            border-bottom: 1px solid var(--card-border);
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.6rem; font-weight: 800;
+            letter-spacing: -0.5px; text-transform: uppercase;
+            background: linear-gradient(130deg, var(--text-main) 30%, var(--accent-blue) 80%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; user-select: none;
+            flex-shrink: 0;
+        }
+        .logo svg { width: 26px; height: 26px; fill: none; stroke: var(--accent-blue); stroke-width: 1.8; animation: floatGlow 3s infinite; }
+
+        nav { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; }
+
+        .nav-link {
+            color: var(--text-muted); text-decoration: none;
+            font-size: 0.88rem; font-weight: 500;
+            padding: 0.4rem 0.2rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s; cursor: pointer;
+            background: none; border-top: none; border-left: none; border-right: none;
+        }
+        .nav-link:hover, .nav-link.active-link { color: var(--text-main); border-bottom-color: var(--accent-blue); }
+
+        .nav-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+        .btn-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            color: var(--text-main);
+        }
+        .btn-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-icon:hover { background: rgba(118,185,255,0.15); border-color: var(--accent-blue); transform: translateY(-2px); }
+
+        .btn-download {
+            background: linear-gradient(135deg, #ffffff, #d9e6ff);
+            color: #0a0f15; padding: 0.6rem 1.4rem;
+            border-radius: 60px; text-decoration: none;
+            font-weight: 700; font-size: 0.85rem;
+            transition: all 0.4s var(--transition-smooth);
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer; white-space: nowrap;
+        }
+        .btn-download:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px var(--accent-glow);
+        }
+
+        .btn-ghost {
+            background: transparent; color: var(--text-main);
+            padding: 0.6rem 1.2rem; border-radius: 60px;
+            font-weight: 600; font-size: 0.85rem;
+            border: 1px solid var(--card-border);
+            cursor: pointer; transition: all 0.3s; white-space: nowrap;
+        }
+        .btn-ghost:hover { background: var(--accent-glow); border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        .burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; background: none; border: none; }
+        .burger span { width: 24px; height: 2px; background: var(--text-main); border-radius: 2px; transition: 0.3s; }
+
+        /* ============ ANNOUNCEMENT BAR ============ */
+        .announcement-bar {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 0.5rem 5%; font-size: 0.85rem;
+            background: linear-gradient(90deg, var(--accent-glow), transparent, var(--accent-glow));
+            border-bottom: 1px solid var(--card-border);
+            position: relative; z-index: 90;
+        }
+        .announcement-bar .close-ann { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; }
+
+        /* ============ DEVICE BANNER ============ */
+        .device-banner {
+            display: none; align-items: center; justify-content: center; gap: 14px;
+            padding: 0.8rem 5%;
+            background: linear-gradient(90deg, var(--accent-glow), transparent, var(--accent-glow));
+            border-bottom: 1px solid var(--accent-glow);
+            font-size: 0.9rem; flex-wrap: wrap; text-align: center;
+        }
+        .device-banner.visible { display: flex; }
+        .device-banner svg { width: 20px; height: 20px; stroke: var(--accent-blue); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+        .device-banner strong { color: var(--accent-blue); }
+        .banner-cta {
+            background: linear-gradient(135deg, var(--accent-blue), #3a6ea5);
+            color: #fff; padding: 0.45rem 1.2rem; border-radius: 60px;
+            font-weight: 700; font-size: 0.8rem;
+            border: none; cursor: pointer; transition: all 0.3s;
+            text-decoration: none; display: inline-block;
+        }
+        .banner-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 18px var(--glow-strong); }
+        .banner-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+
+        /* ============ HERO ============ */
+        .hero {
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            padding: 4.5rem 5% 6rem; max-width: 900px; margin: 0 auto;
+            position: relative;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -30%; left: 50%;
+            transform: translateX(-50%); width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: -1;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.4rem 1.2rem; border-radius: 60px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-blue);
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--accent-blue);
+            margin-bottom: 1.8rem;
+        }
+        .hero h1 {
+            font-size: 3.4rem; font-weight: 800; line-height: 1.15;
+            margin-bottom: 1.4rem; letter-spacing: -1.5px;
+            background: linear-gradient(180deg, var(--text-main) 20%, var(--text-muted) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2.5rem; max-width: 650px; }
+        .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.03); color: var(--text-main);
+            padding: 0.7rem 1.8rem; border-radius: 60px;
+            text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            border: 1px solid var(--card-border);
+            transition: all 0.35s var(--transition-smooth);
+            backdrop-filter: blur(8px); display: inline-flex; align-items: center; gap: 8px;
+            cursor: pointer;
+        }
+        .btn-secondary svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .btn-secondary:hover { background: var(--accent-glow); border-color: var(--accent-blue); transform: translateY(-3px); color: var(--accent-blue); }
+
+        /* ============ STATS BAR ============ */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.5rem; max-width: 1000px; margin: 0 auto; padding: 2rem 5%;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-size: 2.2rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-blue), #b8d6ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ============ FEATURES ============ */
+        .features { padding: 4rem 5%; border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); background: color-mix(in srgb, var(--bg-color) 60%, transparent); }
+        .features-header { text-align: center; max-width: 700px; margin: 0 auto 3rem; }
+        .features-header h2 {
+            font-size: 2.2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 1rem;
+            background: linear-gradient(180deg, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .features-header p { color: var(--text-muted); }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+        .feature-card {
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            padding: 2rem 1.8rem; border-radius: 24px;
+            border: 1px solid var(--card-border);
+            transition: all 0.45s var(--transition-smooth);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
+        }
+        .feature-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--accent-glow); border-radius: 16px; margin-bottom: 1.3rem;
+        }
+        .feature-icon svg { width: 26px; height: 26px; fill: none; stroke: var(--accent-blue); stroke-width: 1.6; }
+        .feature-card h3 { font-size: 1.2rem; margin-bottom: 0.6rem; font-weight: 700; }
+        .feature-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.7; flex: 1; }
+
+        /* ============ PRICING ============ */
+        .pricing { padding: 4rem 5%; max-width: 1200px; margin: 0 auto; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+        .pricing-card {
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            padding: 2rem 1.8rem; border-radius: 24px;
+            border: 1px solid var(--card-border);
+            display: flex; flex-direction: column; gap: 1rem;
+            transition: all 0.4s;
+            position: relative;
+        }
+        .pricing-card.featured {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 30px var(--accent-glow);
+            transform: scale(1.03);
+        }
+        .pricing-card .badge-featured {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: var(--accent-blue); color: #0a0f15;
+            padding: 0.3rem 1rem; border-radius: 60px;
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        }
+        .pricing-card h3 { font-size: 1.3rem; }
+        .price { font-size: 2.4rem; font-weight: 800; }
+        .price span { font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
+        .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+        .pricing-features li { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; color: var(--text-muted); }
+        .pricing-features li svg { width: 16px; height: 16px; stroke: var(--success); fill: none; stroke-width: 3; flex-shrink: 0; }
+
+        /* ============ TESTIMONIALS ============ */
+        .testimonials { padding: 4rem 5%; overflow: hidden; }
+        .testimonial-track {
+            display: flex; gap: 1.5rem;
+            animation: marquee 40s linear infinite;
+            width: max-content;
+        }
+        .testimonial-track:hover { animation-play-state: paused; }
+        .testimonial {
+            min-width: 320px; background: var(--card-bg);
+            padding: 1.8rem; border-radius: 20px;
+            border: 1px solid var(--card-border);
+        }
+        .testimonial-text { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem; font-style: italic; }
+        .testimonial-author { display: flex; align-items: center; gap: 10px; }
+        .testimonial-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; font-size: 0.85rem;
+        }
+        .testimonial-author .name { font-weight: 600; font-size: 0.9rem; }
+        .testimonial-author .role { font-size: 0.78rem; color: var(--text-muted); }
+        .stars { color: var(--warning); font-size: 0.85rem; margin-bottom: 0.5rem; }
+
+        /* ============ FAQ ============ */
+        .faq { padding: 4rem 5%; max-width: 800px; margin: 0 auto; }
+        .faq-item {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; margin-bottom: 0.8rem; overflow: hidden;
+        }
+        .faq-question {
+            width: 100%; text-align: left; padding: 1.1rem 1.4rem;
+            background: none; border: none; color: var(--text-main);
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px;
+        }
+        .faq-question::after {
+            content: '+'; font-size: 1.4rem; color: var(--accent-blue);
+            transition: transform 0.3s;
+        }
+        .faq-item.open .faq-question::after { transform: rotate(45deg); }
+        .faq-answer {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            padding: 0 1.4rem;
+            color: var(--text-muted); font-size: 0.9rem;
+        }
+        .faq-item.open .faq-answer { max-height: 300px; padding: 0 1.4rem 1.2rem; }
+
+        /* ============ NEWSLETTER ============ */
+        .newsletter {
+            padding: 3rem 5%; max-width: 700px; margin: 0 auto;
+            text-align: center;
+        }
+        .newsletter h2 { font-size: 1.8rem; margin-bottom: 0.8rem; }
+        .newsletter p { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .newsletter-form { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+        .newsletter-form input {
+            flex: 1; min-width: 220px;
+            padding: 0.8rem 1.2rem; border-radius: 60px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); color: var(--text-main);
+            font-size: 0.9rem; outline: none;
+            transition: border-color 0.3s;
+        }
+        .newsletter-form input:focus { border-color: var(--accent-blue); }
+        .newsletter-form input.error { border-color: var(--danger); animation: shake 0.4s; }
+
+        /* ============ ROADMAP ============ */
+        .roadmap { padding: 4rem 5%; max-width: 900px; margin: 0 auto; }
+        .roadmap-timeline { position: relative; padding-left: 2rem; }
+        .roadmap-timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: linear-gradient(180deg, var(--accent-blue), transparent);
+        }
+        .roadmap-item { position: relative; margin-bottom: 1.8rem; }
+        .roadmap-item::before {
+            content: ''; position: absolute; left: -2rem; top: 6px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--glow-strong);
+            border: 3px solid var(--bg-color);
+        }
+        .roadmap-item .quarter { font-size: 0.75rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .roadmap-item h4 { font-size: 1rem; margin: 0.3rem 0; }
+        .roadmap-item p { font-size: 0.88rem; color: var(--text-muted); }
+        .roadmap-item.done .quarter::after { content: ' ✓'; color: var(--success); }
+
+        /* ============ BLOG ============ */
+        .blog { padding: 4rem 5%; max-width: 1200px; margin: 0 auto; }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .blog-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 20px; overflow: hidden;
+            transition: all 0.4s; cursor: pointer;
+        }
+        .blog-card:hover { transform: translateY(-6px); border-color: var(--accent-blue); }
+        .blog-image {
+            height: 140px;
+            background: linear-gradient(135deg, var(--accent-glow), transparent);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .blog-image svg { width: 40px; height: 40px; stroke: var(--accent-blue); fill: none; stroke-width: 1.5; }
+        .blog-content { padding: 1.4rem; }
+        .blog-content .tag { font-size: 0.7rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase; }
+        .blog-content h3 { font-size: 1.05rem; margin: 0.5rem 0; }
+        .blog-content p { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ============ CONTACT ============ */
+        .contact { padding: 4rem 5%; max-width: 700px; margin: 0 auto; }
+        .contact-form { display: flex; flex-direction: column; gap: 1rem; }
+        .contact-form input, .contact-form textarea {
+            padding: 0.8rem 1.2rem; border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); color: var(--text-main);
+            font-size: 0.9rem; outline: none; font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        .contact-form input:focus, .contact-form textarea:focus { border-color: var(--accent-blue); }
+        .contact-form textarea { resize: vertical; min-height: 120px; }
+        .contact-form .error { border-color: var(--danger); animation: shake 0.4s; }
+        .form-message { font-size: 0.85rem; margin-top: -0.5rem; min-height: 1.2em; }
+        .form-message.success { color: var(--success); }
+        .form-message.error { color: var(--danger); }
+
+        /* ============ STORAGE CALCULATOR ============ */
+        .calculator {
+            padding: 3rem 5%; max-width: 700px; margin: 0 auto;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 24px; margin-bottom: 3rem;
+        }
+        .calculator h3 { margin-bottom: 1rem; text-align: center; }
+        .calc-row { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+        .calc-row label { font-size: 0.88rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .calc-row input[type="range"] { width: 100%; accent-color: var(--accent-blue); }
+        .calc-result {
+            margin-top: 1.2rem; padding: 1.2rem;
+            background: var(--accent-glow); border-radius: 14px;
+            text-align: center; font-weight: 700;
+        }
+        .calc-result .value { font-size: 1.6rem; color: var(--accent-blue); }
+
+        /* ============ QR CODE ============ */
+        .qr-section { padding: 3rem 5%; max-width: 500px; margin: 0 auto; text-align: center; }
+        .qr-box {
+            width: 200px; height: 200px; margin: 1.5rem auto;
+            background: #fff; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px;
+        }
+        .qr-box canvas, .qr-box img { width: 100%; height: 100%; }
+
+        /* ============ COOKIE BANNER ============ */
+        .cookie-banner {
+            position: fixed; bottom: 1rem; left: 1rem; right: 1rem;
+            max-width: 500px; margin: 0 auto;
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px; padding: 1.2rem 1.4rem;
+            display: none; z-index: 500;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .cookie-banner.visible { display: block; animation: fadeInUp 0.5s; }
+        .cookie-banner p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .cookie-banner .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+        .cookie-banner .actions button { flex: 1; min-width: 100px; }
+
+        /* ============ BACK TO TOP ============ */
+        #backToTop {
+            position: fixed; bottom: 1.5rem; right: 1.5rem;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: var(--accent-blue); color: #0a0f15;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s; z-index: 400;
+            box-shadow: 0 8px 20px var(--glow-strong);
+        }
+        #backToTop.visible { opacity: 1; visibility: visible; }
+        #backToTop svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+        #backToTop:hover { transform: translateY(-4px); }
+
+        /* ============ CHATBOT ============ */
+        #chatbotToggle {
+            position: fixed; bottom: 1.5rem; right: 5.5rem;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), #3a6ea5);
+            color: #fff; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 450; box-shadow: 0 8px 20px var(--glow-strong);
+            transition: all 0.3s;
+        }
+        #chatbotToggle:hover { transform: scale(1.08); }
+        #chatbotToggle svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; }
+
+        #chatbotPanel {
+            position: fixed; bottom: 6rem; right: 5.5rem;
+            width: 320px; max-width: calc(100vw - 2rem);
+            height: 420px; max-height: 70vh;
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px; z-index: 450;
+            display: none; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+        #chatbotPanel.visible { display: flex; animation: fadeInUp 0.4s; }
+        .chatbot-header {
+            padding: 0.9rem 1.2rem; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            font-weight: 700; font-size: 0.9rem;
+        }
+        .chatbot-header button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; }
+        .chatbot-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+        .chatbot-msg { padding: 0.6rem 0.9rem; border-radius: 14px; font-size: 0.85rem; max-width: 85%; }
+        .chatbot-msg.bot { background: var(--accent-glow); border-bottom-left-radius: 4px; align-self: flex-start; }
+        .chatbot-msg.user { background: var(--accent-blue); color: #0a0f15; border-bottom-right-radius: 4px; align-self: flex-end; font-weight: 600; }
+        .chatbot-input-area { padding: 0.7rem; border-top: 1px solid var(--card-border); display: flex; gap: 6px; }
+        .chatbot-input-area input {
+            flex: 1; padding: 0.6rem 0.9rem; border-radius: 12px;
+            border: 1px solid var(--card-border); background: rgba(255,255,255,0.04);
+            color: var(--text-main); font-size: 0.85rem; outline: none;
+        }
+        .chatbot-input-area button {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--accent-blue); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chatbot-input-area button svg { width: 16px; height: 16px; stroke: #0a0f15; fill: none; stroke-width: 2.5; }
+
+        /* ============ APP ============ */
+        .app-shell { max-width: 1100px; margin: 2rem auto 4rem; padding: 0 5%; }
+        .app-window {
+            display: grid; grid-template-columns: 300px 1fr; height: 620px;
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border); border-radius: 24px;
+            overflow: hidden; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8);
+        }
+        .app-sidebar { background: color-mix(in srgb, var(--bg-color) 90%, transparent); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; min-height: 0; }
+        .app-sidebar-header { padding: 1rem 1.2rem; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--card-border); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), #3a6ea5); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-info .name { font-weight: 700; font-size: 0.9rem; }
+        .user-info .status { font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 4px; }
+        .user-info .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+        .search-box { margin: 0.8rem 1rem; padding: 0.55rem 0.9rem; background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; display: flex; align-items: center; gap: 8px; }
+        .search-box svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; flex-shrink: 0; }
+        .search-box input { background: none; border: none; outline: none; color: var(--text-main); font-size: 0.85rem; width: 100%; }
+        .chat-list { flex: 1; overflow-y: auto; padding: 0.4rem; min-height: 0; }
+        .chat-item { display: flex; align-items: center; gap: 12px; padding: 0.7rem 0.8rem; border-radius: 14px; cursor: pointer; transition: all 0.25s; border: 1px solid transparent; }
+        .chat-item:hover { background: rgba(255,255,255,0.04); }
+        .chat-item.active-chat { background: var(--accent-glow); border-color: var(--accent-blue); }
+        .chat-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #fff; flex-shrink: 0; position: relative; }
+        .chat-avatar .online-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--success); border: 2px solid var(--bg-color); }
+        .chat-item-content { flex: 1; min-width: 0; }
+        .chat-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+        .chat-item-top .chat-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-item-top .chat-time { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; }
+        .chat-item-bottom { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .chat-item-bottom .chat-preview { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-unread { background: var(--accent-blue); color: #0a0f15; font-size: 0.65rem; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+
+        .app-main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+        .chat-header { padding: 0.9rem 1.2rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--card-border); }
+        .chat-header .chat-avatar { width: 40px; height: 40px; font-size: 0.85rem; }
+        .chat-header-info { flex: 1; }
+        .chat-header-info .chat-title { font-weight: 700; font-size: 0.98rem; }
+        .chat-header-info .chat-sub { font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 4px; }
+        .chat-header-info .chat-sub::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+        .chat-header-info .chat-sub.typing { color: var(--accent-blue); }
+        .chat-header-actions { display: flex; gap: 0.4rem; }
+        .icon-btn { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s; }
+        .icon-btn svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; }
+        .icon-btn:hover { background: var(--accent-glow); border-color: var(--accent-blue); }
+        .icon-btn:hover svg { stroke: var(--accent-blue); }
+
+        .messages { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+        .message-row { display: flex; gap: 8px; align-items: flex-end; animation: popIn 0.35s var(--transition-smooth) both; }
+        .message-row.outgoing { flex-direction: row-reverse; }
+        .message-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .message-bubble { max-width: 70%; padding: 0.65rem 0.95rem; border-radius: 16px; font-size: 0.88rem; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .message-row.incoming .message-bubble { background: rgba(255,255,255,0.06); border-bottom-left-radius: 4px; }
+        .message-row.outgoing .message-bubble { background: linear-gradient(135deg, #2f6fb0, #1d4c80); border-bottom-right-radius: 4px; color: #fff; }
+        .message-time { font-size: 0.62rem; color: rgba(255,255,255,0.4); margin-top: 4px; text-align: right; }
+        .message-row.incoming .message-time { color: var(--text-muted); text-align: left; }
+        .message-actions { display: flex; gap: 4px; margin-top: 4px; opacity: 0; transition: opacity 0.2s; }
+        .message-row:hover .message-actions { opacity: 1; }
+        .message-actions button { background: rgba(255,255,255,0.1); border: none; color: var(--text-main); font-size: 0.7rem; padding: 2px 6px; border-radius: 8px; cursor: pointer; }
+        .message-actions button:hover { background: var(--accent-blue); color: #0a0f15; }
+        .msg-read { font-size: 0.65rem; color: var(--accent-blue); margin-left: 4px; }
+        .msg-reactions { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+        .msg-reaction { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; }
+        .msg-edited { font-size: 0.62rem; color: var(--text-muted); margin-left: 4px; font-style: italic; }
+        .msg-reply-quote { border-left: 2px solid var(--accent-blue); padding-left: 6px; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+
+        .typing-indicator-row { display: flex; gap: 8px; align-items: flex-end; }
+        .typing-bubble { background: rgba(255,255,255,0.06); padding: 0.7rem 1rem; border-radius: 16px; border-bottom-left-radius: 4px; display: flex; gap: 4px; align-items: center; }
+        .typing-bubble span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: typingBounce 1.3s infinite; }
+        .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
+
+        .chat-input-area { padding: 0.8rem 1.2rem; border-top: 1px solid var(--card-border); display: flex; gap: 8px; align-items: center; }
+        .chat-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; padding: 0.7rem 1rem; color: var(--text-main); font-size: 0.88rem; outline: none; transition: border-color 0.3s; font-family: inherit; }
+        .chat-input:focus { border-color: var(--accent-blue); }
+        .send-btn { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-blue), #3a6ea5); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
+        .send-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; }
+        .send-btn:hover { transform: scale(1.06); box-shadow: 0 0 20px var(--glow-strong); }
+        .emoji-btn, .attach-btn, .mic-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s; flex-shrink: 0; }
+        .emoji-btn svg, .attach-btn svg, .mic-btn svg { width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; }
+        .emoji-btn:hover, .attach-btn:hover, .mic-btn:hover { background: var(--accent-glow); border-color: var(--accent-blue); }
+        .mic-btn.recording { background: var(--danger); animation: pulseBadge 1s infinite; }
+        .mic-btn.recording svg { stroke: #fff; }
+
+        .emoji-picker { position: absolute; bottom: 70px; left: 1rem; background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--card-border); border-radius: 16px; padding: 0.8rem; display: none; flex-wrap: wrap; gap: 6px; max-width: 280px; z-index: 10; }
+        .emoji-picker.visible { display: flex; }
+        .emoji-picker button { background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 4px; border-radius: 8px; }
+        .emoji-picker button:hover { background: var(--accent-glow); }
+
+        .chat-settings { padding: 1rem 1.2rem; border-bottom: 1px solid var(--card-border); display: none; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+        .chat-settings.visible { display: flex; }
+        .chat-settings label { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .chat-settings input[type="color"] { width: 32px; height: 24px; border: none; border-radius: 6px; cursor: pointer; }
+        .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: rgba(255,255,255,0.15); position: relative; cursor: pointer; transition: background 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.3s; }
+        .toggle-switch.on { background: var(--accent-blue); }
+        .toggle-switch.on::after { transform: translateX(16px); }
+
+        /* ============ INSTALL ============ */
+        .install-hero { text-align: center; padding: 3.5rem 5% 2rem; }
+        .install-hero h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem; background: linear-gradient(180deg, var(--text-main), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .install-hero p { color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+        .detected-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 1.2rem; padding: 0.5rem 1.3rem; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 60px; font-size: 0.85rem; font-weight: 600; color: var(--success); }
+        .detected-badge svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .platform-tabs { display: flex; justify-content: center; gap: 0.6rem; margin: 2rem auto; flex-wrap: wrap; max-width: 800px; padding: 0 5%; }
+        .platform-tab { display: flex; align-items: center; gap: 8px; padding: 0.7rem 1.2rem; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; position: relative; }
+        .platform-tab .platform-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+        .platform-tab .platform-icon svg { width: 100%; height: 100%; fill: currentColor; }
+        .platform-tab:hover { background: var(--accent-glow); color: var(--text-main); }
+        .platform-tab.active-tab { background: var(--accent-glow); border-color: var(--accent-blue); color: var(--text-main); }
+        .tab-recommended { position: absolute; top: -8px; right: -8px; background: var(--accent-blue); color: #0a0f15; font-size: 0.55rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; white-space: nowrap; }
+        .install-panel { max-width: 760px; margin: 0 auto 3rem; background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 24px; padding: 2rem; }
+        .install-steps { list-style: none; counter-reset: step; }
+        .install-steps li { counter-increment: step; position: relative; padding: 1rem 0 1rem 3.2rem; border-bottom: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 0.2rem; }
+        .install-steps li:last-child { border-bottom: none; }
+        .install-steps li::before { content: counter(step); position: absolute; left: 0; top: 1rem; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #fff, #a8c8f0); color: #0a0f15; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; }
+        .install-steps li strong { font-size: 0.98rem; color: var(--text-main); }
+        .install-steps li span { color: var(--text-muted); font-size: 0.88rem; }
+        .download-big-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; margin-top: 1.5rem; padding: 1rem 2rem; border-radius: 16px; background: linear-gradient(135deg, #fff, #cfe2ff); color: #0a0f15; font-weight: 800; font-size: 1rem; text-decoration: none; border: none; cursor: pointer; transition: all 0.35s; box-shadow: 0 8px 24px var(--accent-glow); }
+        .download-big-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+        .download-big-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 36px var(--glow-strong); }
+        .install-progress { margin-top: 1.2rem; height: 8px; border-radius: 10px; background: rgba(255,255,255,0.08); overflow: hidden; display: none; }
+        .install-progress.visible { display: block; }
+        .install-progress-bar { height: 100%; width: 0%; border-radius: 10px; background: linear-gradient(90deg, var(--accent-blue), #b8d6ff, var(--accent-blue)); background-size: 200% 100%; animation: shimmerProgress 1.5s linear infinite; transition: width 0.3s; }
+        .install-status { margin-top: 0.8rem; font-size: 0.85rem; color: var(--accent-blue); display: none; align-items: center; gap: 8px; justify-content: center; }
+        .install-status.visible { display: flex; }
+        .install-status .spinner { width: 16px; height: 16px; border: 2px solid var(--accent-glow); border-top-color: var(--accent-blue); border-radius: 50%; animation: spinSlow 0.8s linear infinite; }
+        .install-status.done { color: var(--success); }
+        .install-status.done svg { width: 18px; height: 18px; stroke: var(--success); fill: none; stroke-width: 3; stroke-dasharray: 30; animation: checkmark 0.6s ease forwards; }
+
+        /* ============ MODALS ============ */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px); z-index: 800;
+            display: none; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.visible { display: flex; animation: fadeInUp 0.3s; }
+        .modal {
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px; padding: 2rem;
+            max-width: 600px; width: 100%; max-height: 85vh;
+            overflow-y: auto; position: relative;
+        }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; }
+        .modal h2 { margin-bottom: 1rem; }
+        .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.8rem; }
+        .modal p strong { color: var(--text-main); }
+
+        /* ============ TOAST ============ */
+        .toast-container { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; gap: 0.5rem; max-width: 90vw; }
+        .toast { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--accent-blue); border-radius: 14px; padding: 0.8rem 1.2rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.5); font-size: 0.85rem; animation: slideInRight 0.4s var(--transition-smooth) both; }
+        .toast svg { width: 20px; height: 20px; stroke: var(--accent-blue); fill: none; stroke-width: 2; flex-shrink: 0; }
+        .toast.hide { animation: slideInRight 0.3s reverse both; }
+        .toast.error { border-color: var(--danger); }
+        .toast.error svg { stroke: var(--danger); }
+        .toast.success { border-color: var(--success); }
+        .toast.success svg { stroke: var(--success); }
+
+        /* ============ CONFETTI ============ */
+        .confetti-piece { position: fixed; width: 8px; height: 8px; z-index: 9999; animation: confettiFall 2s linear forwards; }
+
+        /* ============ MODAL SETTINGS ============ */
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid var(--card-border); }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row label { font-size: 0.9rem; font-weight: 500; }
+        .settings-row .desc { font-size: 0.78rem; color: var(--text-muted); }
+        .accent-swatches { display: flex; gap: 8px; }
+        .accent-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+        .accent-swatch.active { border-color: var(--text-main); transform: scale(1.15); }
+        .accent-swatch[data-accent="blue"] { background: #76b9ff; }
+        .accent-swatch[data-accent="violet"] { background: #a78bfa; }
+        .accent-swatch[data-accent="green"] { background: #4ade80; }
+        .accent-swatch[data-accent="pink"] { background: #f472b6; }
+        .accent-swatch[data-accent="orange"] { background: #fb923c; }
+
+        /* ============ FOOTER ============ */
+        footer { text-align: center; padding: 2.5rem 5% 2rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--card-border); background: color-mix(in srgb, var(--bg-color) 60%, transparent); }
+        .footer-logo { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main); }
+        .footer-logo svg { width: 20px; height: 20px; stroke: var(--accent-blue); fill: none; }
+        .footer-links { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; cursor: pointer; }
+        .footer-links a:hover { color: var(--accent-blue); }
+
+        /* ============ FOCUS MODE ============ */
+        body.focus-mode .features, body.focus-mode .stats-bar, body.focus-mode .testimonials, body.focus-mode .blog, body.focus-mode .roadmap, body.focus-mode .newsletter { display: none; }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 950px) {
+            .hero h1 { font-size: 2.6rem; }
+            .app-window { grid-template-columns: 260px 1fr; }
+        }
+        @media (max-width: 768px) {
+            header { padding: 1rem 4%; flex-wrap: wrap; gap: 0.8rem; }
+            .nav-actions { order: 3; width: 100%; justify-content: center; }
+            nav { display: none; }
+            .burger { display: flex; }
+            .hero { padding: 3rem 5% 4rem; }
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1rem; }
+            .hero-cta { flex-direction: column; width: 100%; max-width: 320px; }
+            .hero-cta > * { width: 100%; justify-content: center; }
+            .features, .pricing, .testimonials, .faq, .newsletter, .roadmap, .blog, .contact { padding: 2.5rem 5%; }
+            .features-header h2 { font-size: 1.8rem; }
+            .install-hero h1 { font-size: 2rem; }
+            .platform-tabs { gap: 0.4rem; }
+            .platform-tab { padding: 0.55rem 0.9rem; font-size: 0.78rem; }
+            .install-panel { padding: 1.4rem; }
+            .install-steps li { padding-left: 2.8rem; }
+            .install-steps li::before { width: 28px; height: 28px; font-size: 0.8rem; }
+            .app-shell { padding: 0 3%; }
+            .app-window { grid-template-columns: 1fr; height: auto; min-height: 550px; }
+            .app-sidebar { display: none; }
+            .app-main { min-height: 550px; }
+            .message-bubble { max-width: 85%; }
+            .cookie-banner { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; }
+            #chatbotPanel { right: 0.5rem; width: calc(100vw - 1rem); }
+            #chatbotToggle { right: 4.5rem; bottom: 1rem; }
+            #backToTop { right: 1rem; bottom: 1rem; }
+            .pricing-card.featured { transform: none; }
+        }
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.8rem; }
+            .feature-card, .pricing-card { padding: 1.6rem 1.2rem; }
+            .chat-header { padding: 0.7rem 0.9rem; }
+            .chat-input-area { gap: 5px; padding: 0.6rem 0.7rem; }
+            .send-btn, .emoji-btn, .attach-btn, .mic-btn { width: 36px; height: 36px; border-radius: 10px; }
+            .emoji-btn, .attach-btn { display: none; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #26323f; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3e5266; }
+        [data-theme="light"] ::-webkit-scrollbar-thumb { background: #c0ccd8; }
+    </style>
+</head>
+<body>
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+        <div class="preloader-logo">Zora</div>
+        <div class="preloader-spinner"></div>
+    </div>
+
+    <!-- SCROLL PROGRESS -->
+    <div id="scrollProgress"></div>
+
+    <!-- ANNOUNCEMENT BAR -->
+    <div class="announcement-bar" id="announcementBar">
+        <span>🎉 <strong>Zora Pro</strong> est disponible — 3 mois offerts avec le code <strong>ZORA3</strong> !</span>
+        <button class="close-ann" onclick="document.getElementById('announcementBar').style.display='none'">✕</button>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo" onclick="showView('home')">
+            Zora
+            <svg viewBox="0 0 24 24"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" /></svg>
+        </div>
+        <nav>
+            <button class="nav-link active-link" data-view="home" onclick="showView('home')" data-i18n="nav_home">Accueil</button>
+            <button class="nav-link" data-view="features" onclick="showView('features')" data-i18n="nav_features">Fonctionnalités</button>
+            <button class="nav-link" data-view="pricing" onclick="showView('pricing')" data-i18n="nav_pricing">Tarifs</button>
+            <button class="nav-link" data-view="install" onclick="showView('install')" data-i18n="nav_install">Installation</button>
+            <button class="nav-link" data-view="app" onclick="showView('app')" data-i18n="nav_app">Application</button>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="openSettings()" title="Paramètres" aria-label="Paramètres">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <button class="btn-icon" onclick="toggleTheme()" title="Changer de thème" id="themeToggle" aria-label="Changer de thème">
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button class="btn-icon" onclick="toggleLanguage()" title="Changer de langue" id="langToggle" aria-label="Changer de langue">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            </button>
+            <button class="btn-ghost" onclick="showView('app')" data-i18n="nav_open_app">Ouvrir l'app</button>
+            <a href="#" class="btn-download" id="headerDownloadBtn" onclick="handleHeaderDownload(event)" data-i18n="nav_download">Télécharger</a>
+        </div>
+        <button class="burger" onclick="toggleMobileMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </header>
+
+    <!-- MOBILE MENU -->
+    <div id="mobileMenu" style="display:none; background: color-mix(in srgb, var(--bg-color) 95%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--card-border); padding: 1rem 5%; flex-direction: column; gap: 0.4rem; position: sticky; top: 70px; z-index: 99;">
+        <button class="nav-link" data-view="home" onclick="showView('home'); toggleMobileMenu()">Accueil</button>
+        <button class="nav-link" data-view="features" onclick="showView('features'); toggleMobileMenu()">Fonctionnalités</button>
+        <button class="nav-link" data-view="pricing" onclick="showView('pricing'); toggleMobileMenu()">Tarifs</button>
+        <button class="nav-link" data-view="install" onclick="showView('install'); toggleMobileMenu()">Installation</button>
+        <button class="nav-link" data-view="app" onclick="showView('app'); toggleMobileMenu()">Application</button>
+    </div>
+
+    <!-- DEVICE BANNER -->
+    <div class="device-banner" id="deviceBanner">
+        <svg viewBox="0 0 24 24" id="bannerIcon"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg>
+        <span id="bannerText">Nous avons détecté <strong id="detectedOsName">votre appareil</strong>. Téléchargez Zora pour une expérience optimale.</span>
+        <a href="#" class="banner-cta" id="bannerCta" onclick="handleBannerCta(event)">Télécharger</a>
+        <button class="banner-close" onclick="closeDeviceBanner()" aria-label="Fermer">✕</button>
+    </div>
+
+    <!-- ==================== VUE ACCUEIL ==================== -->
+    <div id="view-home" class="view active">
+        <section class="hero">
+            <div class="hero-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg>
+                <span data-i18n="hero_badge">Nouveau · chiffrement quantique</span>
+            </div>
+            <h1 data-i18n="hero_title">La messagerie premium, tout en rondeur et sécurité.</h1>
+            <p data-i18n="hero_sub">Découvrez Zora. Une expérience de communication fluide, un design sombre élégant et une confidentialité totale pour vos échanges au quotidien.</p>
+            <div class="hero-cta">
+                <a href="#" class="btn-download" style="padding:0.8rem 2rem; font-size:1rem;" id="heroDownloadBtn" onclick="handleHeroDownload(event)" data-i18n="hero_cta1">Obtenir l'application</a>
+                <button class="btn-secondary" onclick="showView('features')">
+                    <span data-i18n="hero_cta2">En savoir plus</span>
+                    <svg viewBox="0 0 24 24"><path d="M5 12H19M19 12L12 5M19 12L12 19" /></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- STATS ANIMÉES -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item"><div class="stat-value" data-count="12500000">0</div><div class="stat-label" data-i18n="stat_users">Utilisateurs actifs</div></div>
+            <div class="stat-item"><div class="stat-value" data-count="52">0</div><div class="stat-label" data-i18n="stat_countries">Pays couverts</div></div>
+            <div class="stat-item"><div class="stat-value" data-count="99.99">0</div><div class="stat-label" data-i18n="stat_uptime">% de disponibilité</div></div>
+            <div class="stat-item"><div class="stat-value" data-count="0.03">0</div><div class="stat-label" data-i18n="stat_latency">s de latence moyenne</div></div>
+        </div>
+
+        <!-- TRUST BAR -->
+        <div class="trust-bar" style="max-width:1000px;margin:0 auto;padding:1.5rem 5%;display:flex;flex-wrap:wrap;justify-content:space-around;gap:1rem;">
+            <div class="trust-item" style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:var(--text-muted);">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span data-i18n="trust_1">Chiffrement de bout en bout</span>
+            </div>
+            <div class="trust-item" style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:var(--text-muted);">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span data-i18n="trust_2">Livraison instantanée</span>
+            </div>
+            <div class="trust-item" style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:var(--text-muted);">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent-blue);fill:none;stroke-width:2;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span data-i18n="trust_3">Confidentialité certifiée</span>
+            </div>
+        </div>
+
+        <section class="features" id="features">
+            <div class="features-header">
+                <h2 data-i18n="feat_title">Conçu pour l'excellence</h2>
+                <p data-i18n="feat_sub">Chaque détail compte. Zora repousse les limites de la messagerie.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                    <h3 data-i18n="feat_1_t">Sécurité Maximale</h3>
+                    <p data-i18n="feat_1_d">Chiffrement de bout en bout post-quantique pour une confidentialité absolue.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg></div>
+                    <h3 data-i18n="feat_2_t">Interface Épurée</h3>
+                    <p data-i18n="feat_2_d">Mode sombre natif, animations fluides, confort visuel sans précédent.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+                    <h3 data-i18n="feat_3_t">Ultra Rapide</h3>
+                    <p data-i18n="feat_3_d">Edge computing pour une transmission instantanée, où que vous soyez.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
+                    <h3 data-i18n="feat_4_t">Synchronisation parfaite</h3>
+                    <p data-i18n="feat_4_d">Tous vos appareils synchronisés en temps réel.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section class="testimonials">
+            <div class="features-header" style="text-align:center;max-width:700px;margin:0 auto 2rem;">
+                <h2 data-i18n="testi_title">Ils nous font confiance</h2>
+            </div>
+            <div class="testimonial-track" id="testimonialTrack"></div>
+        </section>
+
+        <!-- NEWSLETTER -->
+        <section class="newsletter">
+            <h2 data-i18n="news_title">Restez informé</h2>
+            <p data-i18n="news_sub">Recevez les dernières nouveautés et offres exclusives.</p>
+            <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+                <input type="email" id="newsletterEmail" placeholder="votre@email.com" required>
+                <button type="submit" class="btn-download" data-i18n="news_btn">S'inscrire</button>
+            </form>
+            <div class="form-message" id="newsletterMsg"></div>
+        </section>
+
+        <!-- CTA FINAL -->
+        <section class="hero" style="padding: 4rem 5% 3rem; max-width: 800px;">
+            <h1 style="font-size: 2.4rem;" data-i18n="final_title">Prêt à passer à l'ère Zora ?</h1>
+            <p style="margin-bottom: 2rem;" data-i18n="final_sub">Rejoignez des millions d'utilisateurs.</p>
+            <div class="hero-cta">
+                <a href="#" class="btn-download" style="padding:0.9rem 2.5rem; font-size:1rem;" onclick="handleHeroDownload(event)" data-i18n="final_cta1">Télécharger gratuitement</a>
+                <button class="btn-secondary" style="padding:0.9rem 2rem;" onclick="showView('app')">
+                    <span data-i18n="final_cta2">Ouvrir l'application web</span>
+                    <svg viewBox="0 0 24 24"><path d="M5 12H19M19 12L12 5M19 12L12 19" /></svg>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== VUE FONCTIONNALITÉS ==================== -->
+    <div id="view-features" class="view">
+        <section class="features" style="border-top:none; padding-top: 3rem;">
+            <div class="features-header">
+                <h2 data-i18n="feat_all_title">Tout ce que Zora peut faire pour vous</h2>
+                <p data-i18n="feat_all_sub">Une suite complète de fonctionnalités.</p>
+            </div>
+            <div class="features-grid" id="allFeaturesGrid"></div>
+        </section>
+
+        <!-- ROADMAP -->
+        <section class="roadmap">
+            <div class="features-header" style="text-align:center;margin-bottom:2rem;">
+                <h2 data-i18n="roadmap_title">Feuille de route</h2>
+            </div>
+            <div class="roadmap-timeline">
+                <div class="roadmap-item done"><div class="quarter">Q1 2026</div><h4>Chiffrement post-quantique</h4><p>Déploiement du protocole de nouvelle génération.</p></div>
+                <div class="roadmap-item done"><div class="quarter">Q2 2026</div><h4>Appels vidéo de groupe</h4><p>Jusqu'à 32 participants en HD.</p></div>
+                <div class="roadmap-item"><div class="quarter">Q3 2026</div><h4>Intégration IA</h4><p>Résumés automatiques et traduction en temps réel.</p></div>
+                <div class="roadmap-item"><div class="quarter">Q4 2026</div><h4>Zora Business</h4><p>Espace de travail collaboratif pour les équipes.</p></div>
+            </div>
+        </section>
+
+        <!-- BLOG -->
+        <section class="blog">
+            <div class="features-header" style="text-align:center;margin-bottom:2rem;">
+                <h2 data-i18n="blog_title">Derniers articles</h2>
+            </div>
+            <div class="blog-grid">
+                <article class="blog-card" onclick="openBlogPost('chiffrement')">
+                    <div class="blog-image"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                    <div class="blog-content">
+                        <div class="tag">Sécurité</div>
+                        <h3>Comment fonctionne le chiffrement post-quantique</h3>
+                        <p>Découvrez les coulisses de notre protocole de sécurité nouvelle génération.</p>
+                    </div>
+                </article>
+                <article class="blog-card" onclick="openBlogPost('design')">
+                    <div class="blog-image"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"></path></svg></div>
+                    <div class="blog-content">
+                        <div class="tag">Design</div>
+                        <h3>L'art du mode sombre parfait</h3>
+                        <p>Comment nous avons calibré chaque nuance pour un confort visuel optimal.</p>
+                    </div>
+                </article>
+                <article class="blog-card" onclick="openBlogPost('vitesse')">
+                    <div class="blog-image"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+                    <div class="blog-content">
+                        <div class="tag">Performance</div>
+                        <h3>Edge computing : 30 ms de latence</h3>
+                        <p>Notre infrastructure distribuée expliquée simplement.</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <div style="text-align:center; padding: 0 5% 3rem;">
+            <a href="#" class="btn-download" style="padding:0.9rem 2.5rem; font-size:1rem;" onclick="handleHeroDownload(event)" data-i18n="install_zora">Installer Zora</a>
+        </div>
+    </div>
+
+    <!-- ==================== VUE TARIFS ==================== -->
+    <div id="view-pricing" class="view">
+        <div class="install-hero">
+            <h1 data-i18n="pricing_title">Des tarifs simples et transparents</h1>
+            <p data-i18n="pricing_sub">Commencez gratuitement, passez à Pro quand vous en avez besoin.</p>
+        </div>
+        <div class="pricing">
+            <div class="pricing-grid" id="pricingGrid"></div>
+        </div>
+
+        <!-- CALCULATEUR DE STOCKAGE -->
+        <div class="calculator">
+            <h3 data-i18n="calc_title">Estimez vos besoins de stockage</h3>
+            <div class="calc-row">
+                <label><span data-i18n="calc_msgs">Messages par jour</span> <span id="calcMsgsVal">100</span></label>
+                <input type="range" min="10" max="1000" value="100" id="calcMsgs" oninput="updateCalculator()">
+            </div>
+            <div class="calc-row">
+                <label><span data-i18n="calc_files">Fichiers par mois</span> <span id="calcFilesVal">20</span></label>
+                <input type="range" min="0" max="200" value="20" id="calcFiles" oninput="updateCalculator()">
+            </div>
+            <div class="calc-row">
+                <label><span data-i18n="calc_videos">Vidéos par mois</span> <span id="calcVideosVal">5</span></label>
+                <input type="range" min="0" max="50" value="5" id="calcVideos" oninput="updateCalculator()">
+            </div>
+            <div class="calc-result">
+                <div data-i18n="calc_result">Stockage recommandé</div>
+                <div class="value" id="calcResult">— Go / mois</div>
+            </div>
+        </div>
+
+        <!-- QR CODE -->
+        <div class="qr-section">
+            <h3 data-i18n="qr_title">Partagez Zora</h3>
+            <p style="color:var(--text-muted);font-size:0.9rem;" data-i18n="qr_sub">Scannez ce QR code pour inviter un ami.</p>
+            <div class="qr-box" id="qrBox">
+                <div id="qrCanvas"></div>
+            </div>
+            <button class="btn-secondary" onclick="downloadQR()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="qr_download">Télécharger le QR</span></button>
+        </div>
+    </div>
+
+    <!-- ==================== VUE INSTALLATION ==================== -->
+    <div id="view-install" class="view">
+        <div class="install-hero">
+            <h1 data-i18n="install_title">Installez Zora</h1>
+            <p data-i18n="install_sub">Nous avons sélectionné la version la plus adaptée à votre appareil.</p>
+            <div class="detected-badge" id="detectedBadge">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="detectedBadgeText">Détection en cours...</span>
+            </div>
+        </div>
+        <div class="platform-tabs" id="platformTabs"></div>
+        <div class="install-panel" id="installPanel">
+            <ol class="install-steps" id="installSteps"></ol>
+            <a href="#" class="download-big-btn" id="downloadBtn" onclick="startRealDownload(event)">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="downloadBtnText">Télécharger</span>
+            </a>
+            <div class="install-progress" id="installProgress"><div class="install-progress-bar" id="installProgressBar"></div></div>
+            <div class="install-status" id="installStatus"><div class="spinner"></div><span>Préparation...</span></div>
+        </div>
+        <div class="web-fallback" style="text-align:center;padding:0 5% 3rem;">
+            <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:1.5rem;" data-i18n="install_web">Vous préférez ne rien installer ? Essayez Zora dans votre navigateur.</p>
+            <button class="btn-secondary" style="padding: 0.8rem 2rem;" onclick="openWebApp()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 010 20 15.3 15.3 0 010-20z"></path></svg>
+                <span data-i18n="install_web_btn">Ouvrir l'application web</span>
+            </button>
+        </div>
+        <!-- FAQ -->
+        <section class="faq">
+            <div class="features-header" style="text-align:center;margin-bottom:2rem;"><h2 data-i18n="faq_title">Questions fréquentes</h2></div>
+            <div id="faqContainer"></div>
+        </section>
+    </div>
+
+    <!-- ==================== VUE APPLICATION ==================== -->
+    <div id="view-app" class="view">
+        <div class="install-hero" style="padding: 2.5rem 5% 1rem;">
+            <h1 style="font-size: 2.2rem;" data-i18n="app_title">Zora Web</h1>
+            <p data-i18n="app_sub">Messagerie instantanée — démo interactive.</p>
+        </div>
+        <div class="app-shell">
+            <div class="app-window">
+                <aside class="app-sidebar">
+                    <div class="app-sidebar-header">
+                        <div class="user-avatar">VS</div>
+                        <div class="user-info"><div class="name">Vous</div><div class="status">En ligne</div></div>
+                        <button class="icon-btn" onclick="openChatSettings()" title="Paramètres">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" placeholder="Rechercher..." id="searchInput" oninput="filterChats(this.value)">
+                    </div>
+                    <div class="chat-list" id="chatList"></div>
+                    <div style="padding:0.6rem;border-top:1px solid var(--card-border);display:flex;gap:6px;">
+                        <button class="icon-btn" onclick="createGroup()" title="Nouveau groupe" style="flex:1;width:auto;gap:6px;font-size:0.78rem;color:var(--text-muted);">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            Nouveau groupe
+                        </button>
+                    </div>
+                </aside>
+                <div class="app-main">
+                    <div class="chat-settings" id="chatSettings">
+                        <label>Fond du chat <input type="color" id="chatBgColor" value="#101824" onchange="applyChatBg(this.value)"></label>
+                        <label><span class="toggle-switch" id="dndToggle" onclick="toggleDND()"></span> Ne pas déranger</label>
+                        <label><span class="toggle-switch" id="ephemeralToggle" onclick="toggleEphemeral()"></span> Messages éphémères</label>
+                    </div>
+                    <div class="chat-header" id="chatHeader"></div>
+                    <div class="messages" id="messagesContainer"></div>
+                    <div class="chat-input-area">
+                        <div class="emoji-picker" id="emojiPicker"></div>
+                        <button class="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                        </button>
+                        <button class="attach-btn" onclick="attachFile()" title="Joindre un fichier">
+                            <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        </button>
+                        <input type="text" class="chat-input" id="messageInput" placeholder="Écrivez un message..." onkeydown="handleKeyDown(event)" autocomplete="off">
+                        <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Message vocal">
+                            <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"></path></svg>
+                        </button>
+                        <button class="send-btn" onclick="sendMessage()" title="Envoyer">
+                            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODALES ==================== -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+            <h2>Paramètres</h2>
+            <div class="settings-row">
+                <div><label>Thème</label><div class="desc">Clair ou sombre</div></div>
+                <div class="toggle-switch" id="themeSwitch" onclick="toggleTheme()"></div>
+            </div>
+            <div class="settings-row">
+                <div><label>Couleur d'accent</label><div class="desc">Personnalisez votre expérience</div></div>
+                <div class="accent-swatches" id="accentSwatches">
+                    <div class="accent-swatch active" data-accent="blue" onclick="setAccent('blue')"></div>
+                    <div class="accent-swatch" data-accent="violet" onclick="setAccent('violet')"></div>
+                    <div class="accent-swatch" data-accent="green" onclick="setAccent('green')"></div>
+                    <div class="accent-swatch" data-accent="pink" onclick="setAccent('pink')"></div>
+                    <div class="accent-swatch" data-accent="orange" onclick="setAccent('orange')"></div>
+                </div>
+            </div>
+            <div class="settings-row">
+                <div><label>Taille de police</label><div class="desc">Ajuster le texte</div></div>
+                <input type="range" min="0.85" max="1.3" step="0.05" value="1" id="fontSlider" oninput="setFontScale(this.value)" style="width:120px;">
+            </div>
+            <div class="settings-row">
+                <div><label>Contraste élevé</label><div class="desc">Pour une meilleure lisibilité</div></div>
+                <div class="toggle-switch" id="contrastSwitch" onclick="toggleContrast()"></div>
+            </div>
+            <div class="settings-row">
+                <div><label>Réduire les animations</label><div class="desc">Moins de mouvements</div></div>
+                <div class="toggle-switch" id="motionSwitch" onclick="toggleReducedMotion()"></div>
+            </div>
+            <div class="settings-row">
+                <div><label>Mode focus</label><div class="desc">Masquer les distractions</div></div>
+                <div class="toggle-switch" id="focusSwitch" onclick="toggleFocusMode()"></div>
+            </div>
+            <div class="settings-row">
+                <div><label>Langue</label><div class="desc">FR / EN</div></div>
+                <button class="btn-ghost" onclick="toggleLanguage()" id="langBtn">Français</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="legalModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('legalModal')">✕</button>
+            <h2 id="legalTitle">Mentions légales</h2>
+            <div id="legalContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="blogModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('blogModal')">✕</button>
+            <div id="blogContent"></div>
+        </div>
+    </div>
+
+    <!-- COOKIE BANNER -->
+    <div class="cookie-banner" id="cookieBanner">
+        <p>🍪 Nous utilisons des cookies pour améliorer votre expérience. En continuant, vous acceptez notre <a href="#" onclick="showLegal('cookies');return false;" style="color:var(--accent-blue);">politique de cookies</a>.</p>
+        <div class="actions">
+            <button class="btn-download" onclick="acceptCookies()">Accepter</button>
+            <button class="btn-ghost" onclick="refuseCookies()">Refuser</button>
+        </div>
+    </div>
+
+    <!-- BACK TO TOP -->
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+        <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+
+    <!-- CHATBOT -->
+    <button id="chatbotToggle" onclick="toggleChatbot()" title="Aide" aria-label="Assistant">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </button>
+    <div id="chatbotPanel">
+        <div class="chatbot-header">
+            <span>Assistant Zora</span>
+            <button onclick="toggleChatbot()">✕</button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="chatbot-msg bot">Bonjour ! Comment puis-je vous aider ? Posez-moi une question sur Zora.</div>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatbotInput" placeholder="Votre question..." onkeydown="if(event.key==='Enter')sendChatbot()">
+            <button onclick="sendChatbot()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-logo"><svg viewBox="0 0 24 24"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" /></svg>Zora</div>
+        <div class="footer-links">
+            <a onclick="showLegal('privacy')">Politique de confidentialité</a>
+            <a onclick="showLegal('terms')">Conditions d'utilisation</a>
+            <a onclick="showLegal('cookies')">Cookies</a>
+            <a onclick="openContact()">Contact</a>
+            <a onclick="openSettings()">Paramètres</a>
+        </div>
+        <p>&copy; 2026 Zora. Tous droits réservés. Premium Messaging.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.6;">Fait avec passion pour une communication sans frontières.</p>
+    </footer>
+
+    <script>
+        // ===================== DONNÉES PLATEFORMES =====================
+        const platformIcons = {
+            windows: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 4.4V11H3V5.5ZM10.5 11H21V3L10.5 4.4V11ZM3 12.9H10.5V19.6L3 18.5V12.9ZM10.5 12.9H21V21L10.5 19.6V12.9Z"/></svg>`,
+            macos: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12.5c0-2.3 1.8-3.4 1.9-3.5-1-1.5-2.6-1.7-3.2-1.7-1.4 0-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-3 1-3.8 2.4-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.7-1-2.7-4zM16.3 5.3c.6-.7 1-1.7 1-2.7 0-.1 0-.3-.1-.4-1 .1-2.1.7-2.8 1.5-.6.7-1.1 1.7-1 2.7 0 .1 0 .3.1.4 1.1.1 2.2-.6 2.8-1.5z"/></svg>`,
+            ios: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>`,
+            android: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 0 0-.83.22l-1.88 3.24a11.463 11.463 0 0 0-8.94 0L5.65 5.67a.643.643 0 0 0-.87-.2c-.28.18-.37.54-.22.83L6.4 9.48A10.78 10.78 0 0 0 1 18h22a10.78 10.78 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>`,
+            linux: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9.5 2 7.5 4 7.5 7v2c0 1.5-.5 2.5-1.5 4-1 1.5-2 3-2 5h16c0-2-1-3.5-2-5-1-1.5-1.5-2.5-1.5-4V7c0-3-2-5-4.5-5zm-2 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm4 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>`
+        };
+
+        const downloadLinks = {
+            windows: 'https://votre-domaine.com/downloads/ZoraSetup.exe',
+            macos: 'https://votre-domaine.com/downloads/Zora-1.0.dmg',
+            ios: 'https://apps.apple.com/app/zora-premium-messaging/id000000000',
+            android: 'https://play.google.com/store/apps/details?id=com.zora.premium',
+            linux: 'https://votre-domaine.com/downloads/Zora.AppImage'
+        };
+
+        const platformData = {
+            windows: { name: 'Windows', label: 'Windows', buttonText: 'Télécharger pour Windows', fileInfo: 'ZoraSetup.exe · 82 Mo',
+                steps: [['Téléchargez l\'installateur', 'Cliquez pour récupérer ZoraSetup.exe.'], ['Lancez l\'installation', 'Suivez l\'assistant.'], ['Connectez-vous', 'Entrez votre numéro ou e-mail.'], ['Terminé !', 'Vos conversations se synchronisent.']] },
+            macos: { name: 'macOS', label: 'macOS', buttonText: 'Télécharger pour macOS', fileInfo: 'Zora-1.0.dmg · 95 Mo',
+                steps: [['Téléchargez le .dmg', 'Cliquez pour récupérer Zora-1.0.dmg.'], ['Ouvrez l\'image', 'Double-cliquez sur le fichier.'], ['Glissez dans Applications', 'Faites glisser l\'icône Zora.'], ['Lancez Zora', 'Ouvrez depuis le Launchpad.']] },
+            ios: { name: 'iOS', label: 'iPhone / iPad', buttonText: 'Voir sur l\'App Store', fileInfo: 'Application iOS · Gratuit',
+                steps: [['Ouvrez l\'App Store', 'Sur votre iPhone ou iPad.'], ['Recherchez "Zora"', 'Tapez Zora dans la recherche.'], ['Appuyez sur Obtenir', 'Installez gratuitement.'], ['Connectez-vous', 'Créez votre compte.']] },
+            android: { name: 'Android', label: 'Android', buttonText: 'Voir sur Google Play', fileInfo: 'Application Android · Gratuit',
+                steps: [['Ouvrez Google Play', 'Sur votre appareil Android.'], ['Recherchez "Zora"', 'Trouvez l\'application officielle.'], ['Appuyez sur Installer', 'Téléchargement automatique.'], ['Ouvrez et connectez-vous', 'Lancez Zora.']] },
+            linux: { name: 'Linux', label: 'Linux', buttonText: 'Télécharger pour Linux', fileInfo: 'Zora.AppImage · 88 Mo',
+                steps: [['Téléchargez l\'AppImage', 'Cliquez pour récupérer Zora.AppImage.'], ['Rendez exécutable', 'chmod +x Zora.AppImage'], ['Lancez Zora', 'Double-cliquez ou ./Zora.AppImage'], ['Connectez-vous', 'Créez votre compte.']] }
+        };
+
+        // ===================== ÉTAT GLOBAL =====================
+        let detectedPlatform = 'windows', currentPlatform = 'windows', bannerDismissed = false;
+        let currentLang = localStorage.getItem('zora-lang') || 'fr';
+        let activeChatId = 1, isTypingTimeout = null, chatInitialized = false;
+        let messageReplyContext = null, editingMessageIndex = -1;
+        let ephemeralMode = false, dndMode = false, recording = false, mediaRecorder = null;
+
+        // ===================== TRADUCTIONS =====================
+        const i18n = {
+            fr: {
+                nav_home: 'Accueil', nav_features: 'Fonctionnalités', nav_pricing: 'Tarifs', nav_install: 'Installation', nav_app: 'Application',
+                nav_open_app: 'Ouvrir l\'app', nav_download: 'Télécharger',
+                hero_badge: 'Nouveau · chiffrement quantique',
+                hero_title: 'La messagerie premium, tout en rondeur et sécurité.',
+                hero_sub: 'Découvrez Zora. Une expérience de communication fluide, un design sombre élégant et une confidentialité totale pour vos échanges au quotidien.',
+                hero_cta1: 'Obtenir l\'application', hero_cta2: 'En savoir plus',
+                stat_users: 'Utilisateurs actifs', stat_countries: 'Pays couverts', stat_uptime: '% de disponibilité', stat_latency: 's de latence moyenne',
+                trust_1: 'Chiffrement de bout en bout', trust_2: 'Livraison instantanée', trust_3: 'Confidentialité certifiée',
+                feat_title: 'Conçu pour l\'excellence', feat_sub: 'Chaque détail compte. Zora repousse les limites de la messagerie.',
+                feat_1_t: 'Sécurité Maximale', feat_1_d: 'Chiffrement de bout en bout post-quantique pour une confidentialité absolue.',
+                feat_2_t: 'Interface Épurée', feat_2_d: 'Mode sombre natif, animations fluides, confort visuel sans précédent.',
+                feat_3_t: 'Ultra Rapide', feat_3_d: 'Edge computing pour une transmission instantanée, où que vous soyez.',
+                feat_4_t: 'Synchronisation parfaite', feat_4_d: 'Tous vos appareils synchronisés en temps réel.',
+                testi_title: 'Ils nous font confiance',
+                news_title: 'Restez informé', news_sub: 'Recevez les dernières nouveautés et offres exclusives.', news_btn: 'S\'inscrire',
+                final_title: 'Prêt à passer à l\'ère Zora ?', final_sub: 'Rejoignez des millions d\'utilisateurs.',
+                final_cta1: 'Télécharger gratuitement', final_cta2: 'Ouvrir l\'application web',
+                feat_all_title: 'Tout ce que Zora peut faire pour vous', feat_all_sub: 'Une suite complète de fonctionnalités.',
+                roadmap_title: 'Feuille de route', blog_title: 'Derniers articles', install_zora: 'Installer Zora',
+                pricing_title: 'Des tarifs simples et transparents', pricing_sub: 'Commencez gratuitement, passez à Pro quand vous en avez besoin.',
+                calc_title: 'Estimez vos besoins de stockage', calc_msgs: 'Messages par jour', calc_files: 'Fichiers par mois', calc_videos: 'Vidéos par mois', calc_result: 'Stockage recommandé',
+                qr_title: 'Partagez Zora', qr_sub: 'Scannez ce QR code pour inviter un ami.', qr_download: 'Télécharger le QR',
+                install_title: 'Installez Zora', install_sub: 'Nous avons sélectionné la version la plus adaptée à votre appareil.',
+                install_web: 'Vous préférez ne rien installer ? Essayez Zora dans votre navigateur.', install_web_btn: 'Ouvrir l\'application web',
+                faq_title: 'Questions fréquentes',
+                app_title: 'Zora Web', app_sub: 'Messagerie instantanée — démo interactive.',
+            },
+            en: {
+                nav_home: 'Home', nav_features: 'Features', nav_pricing: 'Pricing', nav_install: 'Install', nav_app: 'App',
+                nav_open_app: 'Open app', nav_download: 'Download',
+                hero_badge: 'New · quantum encryption',
+                hero_title: 'Premium messaging, rounded and secure.',
+                hero_sub: 'Discover Zora. Fluid communication, elegant dark design and total privacy for your daily exchanges.',
+                hero_cta1: 'Get the app', hero_cta2: 'Learn more',
+                stat_users: 'Active users', stat_countries: 'Countries', stat_uptime: '% uptime', stat_latency: 's average latency',
+                trust_1: 'End-to-end encryption', trust_2: 'Instant delivery', trust_3: 'Certified privacy',
+                feat_title: 'Built for excellence', feat_sub: 'Every detail matters. Zora pushes the limits of messaging.',
+                feat_1_t: 'Maximum Security', feat_1_d: 'Post-quantum end-to-end encryption for absolute privacy.',
+                feat_2_t: 'Clean Interface', feat_2_d: 'Native dark mode, smooth animations, unprecedented visual comfort.',
+                feat_3_t: 'Ultra Fast', feat_3_d: 'Edge computing for instant transmission, anywhere in the world.',
+                feat_4_t: 'Perfect Sync', feat_4_d: 'All your devices synchronized in real time.',
+                testi_title: 'They trust us',
+                news_title: 'Stay informed', news_sub: 'Receive the latest news and exclusive offers.', news_btn: 'Subscribe',
+                final_title: 'Ready for the Zora era?', final_sub: 'Join millions of users.',
+                final_cta1: 'Download for free', final_cta2: 'Open web app',
+                feat_all_title: 'Everything Zora can do for you', feat_all_sub: 'A complete suite of features.',
+                roadmap_title: 'Roadmap', blog_title: 'Latest articles', install_zora: 'Install Zora',
+                pricing_title: 'Simple, transparent pricing', pricing_sub: 'Start for free, upgrade to Pro when you need it.',
+                calc_title: 'Estimate your storage needs', calc_msgs: 'Messages per day', calc_files: 'Files per month', calc_videos: 'Videos per month', calc_result: 'Recommended storage',
+                qr_title: 'Share Zora', qr_sub: 'Scan this QR code to invite a friend.', qr_download: 'Download QR',
+                install_title: 'Install Zora', install_sub: 'We selected the best version for your device.',
+                install_web: 'Prefer not to install? Try Zora in your browser.', install_web_btn: 'Open web app',
+                faq_title: 'Frequently asked questions',
+                app_title: 'Zora Web', app_sub: 'Instant messaging — interactive demo.',
+            }
+        };
+
+        function t(key) { return i18n[currentLang][key] || i18n.fr[key] || key; }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (i18n[currentLang][key]) el.textContent = i18n[currentLang][key];
+            });
+            document.getElementById('langBtn').textContent = currentLang === 'fr' ? 'Français' : 'English';
+            document.documentElement.lang = currentLang;
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'fr' ? 'en' : 'fr';
+            localStorage.setItem('zora-lang', currentLang);
+            applyTranslations();
+            rebuildDynamicContent();
+            showToast(currentLang === 'fr' ? 'Langue changée en français' : 'Language switched to English', 'success');
+        }
+
+        // ===================== THÈME & PRÉFÉRENCES =====================
+        function applyPreferences() {
+            const theme = localStorage.getItem('zora-theme') || 'dark';
+            const accent = localStorage.getItem('zora-accent') || 'blue';
+            const contrast = localStorage.getItem('zora-contrast') === 'true';
+            const motion = localStorage.getItem('zora-motion') === 'reduced';
+            const fontScale = localStorage.getItem('zora-font') || '1';
+
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-accent', accent);
+            document.documentElement.setAttribute('data-contrast', contrast ? 'high' : 'normal');
+            document.documentElement.setAttribute('data-reduced-motion', motion ? 'true' : 'false');
+            document.documentElement.style.setProperty('--font-scale', fontScale);
+
+            document.getElementById('themeSwitch')?.classList.toggle('on', theme === 'dark');
+            document.getElementById('contrastSwitch')?.classList.toggle('on', contrast);
+            document.getElementById('motionSwitch')?.classList.toggle('on', motion);
+            document.getElementById('fontSlider').value = fontScale;
+
+            document.querySelectorAll('.accent-swatch').forEach(s => {
+                s.classList.toggle('active', s.dataset.accent === accent);
+            });
+
+            const themeIcon = document.getElementById('themeToggle');
+            if (themeIcon) {
+                themeIcon.innerHTML = theme === 'dark'
+                    ? '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+                    : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg>';
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('zora-theme', next);
+            document.getElementById('themeSwitch')?.classList.toggle('on', next === 'dark');
+            applyPreferences();
+            showToast(next === 'dark' ? 'Thème sombre activé' : 'Thème clair activé', 'success');
+        }
+
+        function setAccent(accent) {
+            document.documentElement.setAttribute('data-accent', accent);
+            localStorage.setItem('zora-accent', accent);
+            document.querySelectorAll('.accent-swatch').forEach(s => s.classList.toggle('active', s.dataset.accent === accent));
+            showToast('Couleur d\'accent mise à jour', 'success');
+        }
+
+        function setFontScale(val) {
+            document.documentElement.style.setProperty('--font-scale', val);
+            localStorage.setItem('zora-font', val);
+        }
+
+        function toggleContrast() {
+            const current = document.documentElement.getAttribute('data-contrast') === 'high';
+            document.documentElement.setAttribute('data-contrast', current ? 'normal' : 'high');
+            localStorage.setItem('zora-contrast', (!current).toString());
+            document.getElementById('contrastSwitch')?.classList.toggle('on', !current);
+            showToast(!current ? 'Contraste élevé activé' : 'Contraste normal', 'success');
+        }
+
+        function toggleReducedMotion() {
+            const current = document.documentElement.getAttribute('data-reduced-motion') === 'true';
+            document.documentElement.setAttribute('data-reduced-motion', (!current).toString());
+            localStorage.setItem('zora-motion', !current ? 'reduced' : 'normal');
+            document.getElementById('motionSwitch')?.classList.toggle('on', !current);
+            showToast(!current ? 'Animations réduites' : 'Animations complètes', 'success');
+        }
+
+        function toggleFocusMode() {
+            document.body.classList.toggle('focus-mode');
+            const on = document.body.classList.contains('focus-mode');
+            document.getElementById('focusSwitch')?.classList.toggle('on', on);
+            showToast(on ? 'Mode focus activé' : 'Mode focus désactivé', 'success');
+        }
+
+        function openSettings() { document.getElementById('settingsModal').classList.add('visible'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+
+        // ===================== DÉTECTION D'APPAREIL =====================
+        function detectDevice() {
+            const ua = navigator.userAgent, platform = navigator.platform || '';
+            if (/iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+            if (/Android/i.test(ua)) return 'android';
+            if (/Win/i.test(platform) || /Windows/i.test(ua)) return 'windows';
+            if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) return 'macos';
+            if (/Linux/i.test(platform) || /Linux/i.test(ua)) return 'linux';
+            return 'windows';
+        }
+
+        function getDeviceLabel(p) { return platformData[p]?.name || 'votre appareil'; }
+
+        function showDeviceBanner() {
+            if (bannerDismissed) return;
+            const banner = document.getElementById('deviceBanner');
+            document.getElementById('detectedOsName').textContent = getDeviceLabel(detectedPlatform);
+            const cta = document.getElementById('bannerCta');
+            if (detectedPlatform === 'ios') cta.textContent = 'Voir sur l\'App Store';
+            else if (detectedPlatform === 'android') cta.textContent = 'Voir sur Google Play';
+            else cta.textContent = `Télécharger pour ${getDeviceLabel(detectedPlatform)}`;
+            document.getElementById('bannerIcon').outerHTML = platformIcons[detectedPlatform].replace('<svg', '<svg id="bannerIcon"');
+            banner.classList.add('visible');
+        }
+        function closeDeviceBanner() { document.getElementById('deviceBanner').classList.remove('visible'); bannerDismissed = true; }
+        function handleBannerCta(e) {
+            e.preventDefault();
+            const url = downloadLinks[detectedPlatform];
+            if (url) window.open(url, '_blank');
+            else { showView('install'); selectPlatform(detectedPlatform); }
+        }
+
+        function handleHeaderDownload(e) {
+            e.preventDefault();
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isMobile && (detectedPlatform === 'ios' || detectedPlatform === 'android')) {
+                window.open(downloadLinks[detectedPlatform], '_blank');
+            } else {
+                showView('install'); selectPlatform(detectedPlatform);
+            }
+        }
+        function handleHeroDownload(e) { e.preventDefault(); showView('install'); selectPlatform(detectedPlatform); }
+        function openWebApp() { showView('app'); }
+
+        function selectPlatform(platform) {
+            if (!platformData[platform]) platform = 'windows';
+            currentPlatform = platform;
+            const data = platformData[platform];
+
+            document.getElementById('platformTabs').innerHTML = Object.keys(platformData).map(key => {
+                const p = platformData[key];
+                const isActive = key === platform, isDetected = key === detectedPlatform;
+                return `<button class="platform-tab ${isActive ? 'active-tab' : ''}" onclick="selectPlatform('${key}')">
+                    <span class="platform-icon">${platformIcons[key]}</span>${p.label}
+                    ${isDetected ? '<span class="tab-recommended">Recommandé</span>' : ''}
+                </button>`;
+            }).join('');
+
+            document.getElementById('downloadBtnText').textContent = data.buttonText;
+            document.getElementById('installSteps').innerHTML = data.steps.map(([ti, de]) => `<li><strong>${ti}</strong><span>${de}</span></li>`).join('');
+
+            document.getElementById('installProgress').classList.remove('visible');
+            document.getElementById('installStatus').classList.remove('visible', 'done');
+            document.getElementById('installProgressBar').style.width = '0%';
+
+            const badge = document.getElementById('detectedBadge');
+            if (currentPlatform === detectedPlatform) {
+                badge.style.display = 'inline-flex';
+                document.getElementById('detectedBadgeText').textContent = `Version optimisée pour ${getDeviceLabel(detectedPlatform)} détectée`;
+            } else badge.style.display = 'none';
+        }
+
+        function startRealDownload(e) {
+            e.preventDefault();
+            const url = downloadLinks[currentPlatform];
+            const progress = document.getElementById('installProgress');
+            const bar = document.getElementById('installProgressBar');
+            const status = document.getElementById('installStatus');
+            const data = platformData[currentPlatform];
+
+            progress.classList.add('visible');
+            status.classList.add('visible');
+            status.classList.remove('done');
+            status.innerHTML = `<div class="spinner"></div><span>Redirection — ${data.fileInfo}</span>`;
+            bar.style.width = '0%';
+
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += Math.random() * 20 + 10;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(interval);
+                    bar.style.width = '100%';
+                    status.classList.add('done');
+                    status.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Redirection...</span>';
+                    if (url) { window.open(url, '_blank'); showToast(`Téléchargement de Zora pour ${data.name} lancé.`, 'success'); triggerConfetti(); }
+                    else showToast('Lien non configuré — démo.', 'error');
+                }
+                bar.style.width = percent + '%';
+            }, 150);
+        }
+
+        // ===================== NAVIGATION =====================
+        function showView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const target = document.getElementById('view-' + view);
+            if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active-link', l.dataset.view === view));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (view === 'app') setTimeout(initChatApp, 50);
+            if (view === 'pricing') { updateCalculator(); generateQR(); }
+        }
+
+        function toggleMobileMenu() {
+            const m = document.getElementById('mobileMenu');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // ===================== SCROLL PROGRESS + BACK TO TOP =====================
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            document.getElementById('scrollProgress').style.width = pct + '%';
+            document.getElementById('backToTop').classList.toggle('visible', scrollTop > 400);
+        });
+
+        // ===================== ANIMATIONS AU SCROLL =====================
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.animation = 'fadeInUp 0.7s var(--transition-smooth) both';
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // ===================== STATS ANIMÉES =====================
+        function animateStats() {
+            document.querySelectorAll('[data-count]').forEach(el => {
+                const target = parseFloat(el.dataset.count);
+                let current = 0;
+                const step = target / 60;
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) { current = target; clearInterval(timer); }
+                    if (target >= 1000000) el.textContent = (current / 1000000).toFixed(1) + 'M+';
+                    else if (target >= 100) el.textContent = Math.floor(current).toLocaleString('fr-FR');
+                    else el.textContent = current.toFixed(2);
+                }, 20);
+            });
+        }
+
+        // ===================== CONFETTI =====================
+        function triggerConfetti() {
+            const colors = ['#76b9ff', '#a78bfa', '#4ade80', '#fbbf24', '#f472b6'];
+            for (let i = 0; i < 50; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.top = '-10px';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 0.5 + 's';
+                piece.style.animationDuration = (1.5 + Math.random()) + 's';
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 3000);
+            }
+        }
+
+        // ===================== TOAST =====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const icon = type === 'success' ? '<polyline points="20 6 9 17 4 12"></polyline>' : type === 'error' ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' : '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+            toast.innerHTML = `<svg viewBox="0 0 24 24">${icon}</svg><div>${message}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        // ===================== COOKIES =====================
+        function acceptCookies() {
+            localStorage.setItem('zora-cookies', 'accepted');
+            document.getElementById('cookieBanner').classList.remove('visible');
+            showToast('Cookies acceptés. Merci !', 'success');
+        }
+        function refuseCookies() {
+            localStorage.setItem('zora-cookies', 'refused');
+            document.getElementById('cookieBanner').classList.remove('visible');
+            showToast('Cookies refusés.', 'info');
+        }
+
+        // ===================== NEWSLETTER =====================
+        function subscribeNewsletter(e) {
+            e.preventDefault();
+            const input = document.getElementById('newsletterEmail');
+            const msg = document.getElementById('newsletterMsg');
+            const email = input.value.trim();
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!regex.test(email)) {
+                input.classList.add('error');
+                msg.textContent = 'Adresse e-mail invalide.';
+                msg.className = 'form-message error';
+                setTimeout(() => input.classList.remove('error'), 500);
+                return;
+            }
+            input.classList.remove('error');
+            msg.textContent = 'Inscription réussie ! Vérifiez votre boîte mail.';
+            msg.className = 'form-message success';
+            input.value = '';
+            triggerConfetti();
+            showToast('Merci pour votre inscription !', 'success');
+        }
+
+        // ===================== CONTACT =====================
+        function openContact() {
+            const modal = document.getElementById('legalModal');
+            document.getElementById('legalTitle').textContent = 'Contact';
+            document.getElementById('legalContent').innerHTML = `
+                <form class="contact-form" onsubmit="submitContact(event)" style="margin-top:1rem;">
+                    <input type="text" id="contactName" placeholder="Votre nom" required>
+                    <input type="email" id="contactEmail" placeholder="votre@email.com" required>
+                    <textarea id="contactMsg" placeholder="Votre message..." required></textarea>
+                    <button type="submit" class="btn-download" style="padding:0.8rem 2rem;">Envoyer</button>
+                    <div class="form-message" id="contactMsgFeedback"></div>
+                </form>`;
+            modal.classList.add('visible');
+        }
+
+        function submitContact(e) {
+            e.preventDefault();
+            const feedback = document.getElementById('contactMsgFeedback');
+            feedback.textContent = 'Message envoyé ! Nous vous répondrons sous 24h.';
+            feedback.className = 'form-message success';
+            triggerConfetti();
+            setTimeout(() => closeModal('legalModal'), 2000);
+        }
+
+        // ===================== LEGAL =====================
+        function showLegal(type) {
+            const titles = { privacy: 'Politique de confidentialité', terms: 'Conditions d\'utilisation', cookies: 'Politique de cookies' };
+            const contents = {
+                privacy: '<p><strong>Zora</strong> respecte votre vie privée. Toutes vos conversations sont chiffrées de bout en bout. Nous ne collectons que les données strictement nécessaires au fonctionnement du service.</p><p><strong>Données collectées :</strong> e-mail, numéro de téléphone (optionnel), préférences d\'interface.</p><p><strong>Vos droits :</strong> accès, rectification, suppression. Contactez-nous à privacy@zora.app.</p>',
+                terms: '<p>En utilisant Zora, vous acceptez les présentes conditions. Vous vous engagez à ne pas utiliser le service à des fins illégales ou malveillantes.</p><p><strong>Responsabilité :</strong> Zora fournit le service « tel quel » et ne saurait être tenu responsable des interruptions.</p><p><strong>Modifications :</strong> Nous pouvons mettre à jour ces conditions à tout moment.</p>',
+                cookies: '<p>Zora utilise des cookies pour mémoriser vos préférences (thème, langue, paramètres). Aucun cookie publicitaire n\'est utilisé.</p><p><strong>Cookies essentiels :</strong> stockage local des préférences.</p><p><strong>Gestion :</strong> vous pouvez les supprimer via les paramètres de votre navigateur.</p>'
+            };
+            document.getElementById('legalTitle').textContent = titles[type];
+            document.getElementById('legalContent').innerHTML = contents[type];
+            document.getElementById('legalModal').classList.add('visible');
+        }
+
+        // ===================== BLOG =====================
+        function openBlogPost(id) {
+            const posts = {
+                chiffrement: { title: 'Comment fonctionne le chiffrement post-quantique', content: '<p>Le chiffrement post-quantique (PQC) est une classe d\'algorithmes cryptographiques conçus pour résister aux attaques d\'ordinateurs quantiques. Contrairement au RSA ou à l\'ECC, le PQC repose sur des problèmes mathématiques réputés difficiles même pour un ordinateur quantique.</p><p>Chez Zora, nous utilisons <strong>Kyber</strong> pour l\'échange de clés et <strong>Dilithium</strong> pour les signatures. Chaque message est chiffré avec une clé éphémère, garantissant la confidentialité persistante.</p><p>Concrètement, même si un attaquant enregistre vos messages aujourd\'hui, il ne pourra pas les déchiffrer demain, même avec un ordinateur quantique.</p>' },
+                design: { title: 'L\'art du mode sombre parfait', content: '<p>Le mode sombre de Zora n\'est pas un simple inversement de couleurs. Chaque nuance a été calibrée pour un contraste optimal (ratio 4.5:1 minimum) tout en réduisant la fatigue oculaire.</p><p>Nous utilisons une palette de <strong>gris bleutés</strong> plutôt que du noir pur, car le noir absolu crée un effet de « smearing » sur les écrans OLED lors du défilement.</p><p>Les accents de couleur sont choisis pour rester lisibles sur fond sombre tout en conservant leur éclat.</p>' },
+                vitesse: { title: 'Edge computing : 30 ms de latence', content: '<p>Zora déploie son infrastructure sur plus de 200 points de présence (PoP) dans le monde. Lorsque vous envoyez un message, il est routé vers le PoP le plus proche, réduisant la latence à moins de 30 ms.</p><p>Nous utilisons un protocole de synchronisation propriétaire basé sur <strong>WebRTC</strong> pour les appels et <strong>QUIC</strong> pour les messages texte.</p><p>Résultat : vos messages arrivent avant même que vous n\'ayez cligné des yeux.</p>' }
+            };
+            const post = posts[id];
+            document.getElementById('blogContent').innerHTML = `<h2>${post.title}</h2><div style="margin-top:1rem;color:var(--text-muted);font-size:0.9rem;line-height:1.8;">${post.content}</div>`;
+            document.getElementById('blogModal').classList.add('visible');
+        }
+
+        // ===================== CALCULATEUR DE STOCKAGE =====================
+        function updateCalculator() {
+            const msgs = +document.getElementById('calcMsgs').value;
+            const files = +document.getElementById('calcFiles').value;
+            const videos = +document.getElementById('calcVideos').value;
+            document.getElementById('calcMsgsVal').textContent = msgs;
+            document.getElementById('calcFilesVal').textContent = files;
+            document.getElementById('calcVideosVal').textContent = videos;
+            const total = (msgs * 30 * 0.001) + (files * 5) + (videos * 150);
+            document.getElementById('calcResult').textContent = total.toFixed(1) + ' Go / mois';
+        }
+
+        // ===================== QR CODE =====================
+        function generateQR() {
+            const canvas = document.getElementById('qrCanvas');
+            canvas.innerHTML = '<div style="width:100%;height:100%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0a0f15;font-size:0.7rem;text-align:center;padding:10px;">QR ZORA<br>zora.app/invite<br>(démo)</div>';
+        }
+        function downloadQR() { showToast('QR code téléchargé (simulation).', 'success'); triggerConfetti(); }
+
+        // ===================== CHATBOT =====================
+        const chatbotResponses = {
+            'prix': 'Zora propose 3 offres : Gratuit (0€), Pro (4,99€/mois) et Business (12,99€/mois). Consultez la page Tarifs pour plus de détails.',
+            'sécurité': 'Zora utilise le chiffrement post-quantique de bout en bout. Vos messages sont protégés même contre les futures menaces.',
+            'installation': 'Rendez-vous sur la page Installation. Nous détectons automatiquement votre appareil pour vous proposer la meilleure version.',
+            'gratuit': 'Oui ! Zora est gratuit avec des fonctionnalités de base. Passez à Pro pour débloquer le stockage illimité et les appels vidéo.',
+            'appel': 'Les appels vidéo sont disponibles avec l\'offre Pro. Jusqu\'à 32 participants en HD.',
+            'compte': 'Créez un compte avec votre e-mail ou numéro de téléphone. Aucune carte bancaire requise pour l\'offre gratuite.',
+            'default': 'Je ne suis pas sûr de comprendre. Essayez de me demander sur les prix, la sécurité, l\'installation ou les fonctionnalités.'
+        };
+
+        function toggleChatbot() {
+            document.getElementById('chatbotPanel').classList.toggle('visible');
+        }
+
+        function sendChatbot() {
+            const input = document.getElementById('chatbotInput');
+            const text = input.value.trim();
+            if (!text) return;
+            addChatbotMsg(text, 'user');
+            input.value = '';
+            setTimeout(() => {
+                const lower = text.toLowerCase();
+                let response = chatbotResponses.default;
+                for (const key in chatbotResponses) {
+                    if (lower.includes(key)) { response = chatbotResponses[key]; break; }
+                }
+                addChatbotMsg(response, 'bot');
+            }, 600);
+        }
+
+        function addChatbotMsg(text, sender) {
+            const container = document.getElementById('chatbotMessages');
+            const msg = document.createElement('div');
+            msg.className = 'chatbot-msg ' + sender;
+            msg.textContent = text;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ===================== APP CHAT =====================
+        const chatData = [
+            { id: 1, name: 'Léa Martin', avatar: 'LM', color: '#e879f9', online: true, messages: [
+                { from: 'them', text: 'Salut ! Tu as testé la nouvelle version de Zora ?', time: '10:24' },
+                { from: 'me', text: 'Oui ! L\'interface est vraiment fluide 🔥', time: '10:25', read: true },
+                { from: 'them', text: 'Et le chiffrement post-quantique, tu penses que c\'est utile ?', time: '10:26' },
+                { from: 'me', text: 'Totalement. Nos échanges sont protégés pour les 20 prochaines années !', time: '10:27', read: true },
+                { from: 'them', text: 'Génial. On se fait un appel plus tard ?', time: '10:28' }
+            ]},
+            { id: 2, name: 'Thomas Bernard', avatar: 'TB', color: '#38bdf8', online: true, messages: [
+                { from: 'them', text: 'Le fichier ZIP de 1,8 Go est passé sans problème 👌', time: '09:10' },
+                { from: 'me', text: 'Zora gère les gros fichiers nativement, c\'est fou.', time: '09:12', read: true },
+                { from: 'them', text: 'J\'ai aussi activé les messages éphémères pour mes notes sensibles.', time: '09:13' }
+            ]},
+            { id: 3, name: 'Sofia Chen', avatar: 'SC', color: '#fbbf24', online: false, messages: [
+                { from: 'them', text: 'Tu peux me renvoyer le lien de l\'app web ?', time: 'Hier' },
+                { from: 'me', text: 'Bien sûr : zora.app/web — c\'est instantané.', time: 'Hier', read: true },
+                { from: 'them', text: 'Merci ! Je l\'ouvre sur mon iPad.', time: 'Hier' }
+            ]},
+            { id: 4, name: 'Groupe Design', avatar: 'GD', color: '#a78bfa', online: false, messages: [
+                { from: 'them', text: 'Nouvelle maquette disponible dans le drive.', time: '08:45' },
+                { from: 'me', text: 'Je regarde ça dans la journée.', time: '08:50', read: true },
+                { from: 'them', text: 'Pense à voter pour le thème sombre 😉', time: '08:51' }
+            ]}
+        ];
+
+        function initChatApp() {
+            renderChatList(chatData);
+            selectChat(activeChatId);
+            loadChatPreferences();
+        }
+
+        function renderChatList(chats) {
+            document.getElementById('chatList').innerHTML = chats.map(chat => {
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                const preview = lastMsg ? lastMsg.text : 'Aucun message';
+                const time = lastMsg ? lastMsg.time : '';
+                const unread = chat.id === 4 ? '2' : (chat.id === 2 ? '1' : '');
+                return `<div class="chat-item ${chat.id === activeChatId ? 'active-chat' : ''}" onclick="selectChat(${chat.id})">
+                    <div class="chat-avatar" style="background: ${chat.color}">${chat.avatar}${chat.online ? '<span class="online-dot"></span>' : ''}</div>
+                    <div class="chat-item-content">
+                        <div class="chat-item-top"><span class="chat-name">${chat.name}</span><span class="chat-time">${time}</span></div>
+                        <div class="chat-item-bottom"><span class="chat-preview">${preview}</span>${unread ? `<span class="chat-unread">${unread}</span>` : ''}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function selectChat(id) {
+            activeChatId = id;
+            const chat = chatData.find(c => c.id === id);
+            if (!chat) return;
+            document.getElementById('chatHeader').innerHTML = `
+                <div class="chat-avatar" style="background:${chat.color}">${chat.avatar}</div>
+                <div class="chat-header-info">
+                    <div class="chat-title">${chat.name}</div>
+                    <div class="chat-sub" id="chatSub">${chat.online ? 'En ligne' : 'Hors ligne'}</div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="icon-btn" title="Appel" onclick="simulateCall()"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg></button>
+                    <button class="icon-btn" title="Plus" onclick="showToast('Options de conversation.','info')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button>
+                </div>`;
+            renderMessages(chat.messages);
+            renderChatList(chatData);
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            const chat = chatData.find(c => c.id === activeChatId);
+            container.innerHTML = messages.map((msg, i) => {
+                const isMe = msg.from === 'me';
+                const replyQuote = msg.replyTo ? `<div class="msg-reply-quote">${msg.replyTo}</div>` : '';
+                const reactions = msg.reactions && msg.reactions.length ? `<div class="msg-reactions">${msg.reactions.map(r => `<span class="msg-reaction">${r}</span>`).join('')}</div>` : '';
+                const readMark = isMe ? `<span class="msg-read">${msg.read ? '✓✓' : '✓'}</span>` : '';
+                const edited = msg.edited ? '<span class="msg-edited">(modifié)</span>' : '';
+                const actions = `<div class="message-actions">
+                    <button onclick="reactToMessage(${i},'👍')">👍</button>
+                    <button onclick="reactToMessage(${i},'❤️')">❤️</button>
+                    <button onclick="replyToMessage(${i})">↩</button>
+                    ${isMe ? `<button onclick="editMessage(${i})">✎</button><button onclick="deleteMessage(${i})">🗑</button>` : ''}
+                </div>`;
+                return `<div class="message-row ${isMe ? 'outgoing' : 'incoming'}">
+                    ${!isMe ? `<div class="message-avatar" style="background:${chat.color}">${chat.avatar}</div>` : ''}
+                    <div>
+                        <div class="message-bubble">${replyQuote}${escapeHtml(msg.text)}${edited}<div class="message-time">${msg.time}${readMark}</div></div>
+                        ${reactions}
+                        ${actions}
+                    </div>
+                    ${isMe ? `<div class="message-avatar" style="background:linear-gradient(135deg,var(--accent-blue),#3a6ea5)">VS</div>` : ''}
+                </div>`;
+            }).join('');
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 30);
+        }
+
+        function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+
+        function handleKeyDown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const chat = chatData.find(c => c.id === activeChatId);
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const msg = { from: 'me', text, time, read: false };
+            if (messageReplyContext) { msg.replyTo = messageReplyContext; messageReplyContext = null; }
+            chat.messages.push(msg);
+            input.value = '';
+            renderMessages(chat.messages);
+            renderChatList(chatData);
+            setTimeout(() => { msg.read = true; renderMessages(chat.messages); }, 1500);
+
+            const typingId = 'typing-' + Date.now();
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML += `<div class="typing-indicator-row" id="${typingId}"><div class="message-avatar" style="background:${chat.color}">${chat.avatar}</div><div class="typing-bubble"><span></span><span></span><span></span></div></div>`;
+            container.scrollTop = container.scrollHeight;
+            document.getElementById('chatSub').classList.add('typing');
+            document.getElementById('chatSub').textContent = 'En train d\'écrire...';
+
+            if (isTypingTimeout) clearTimeout(isTypingTimeout);
+            isTypingTimeout = setTimeout(() => {
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+                document.getElementById('chatSub').classList.remove('typing');
+                document.getElementById('chatSub').textContent = chat.online ? 'En ligne' : 'Hors ligne';
+                const responses = ['Super, je suis d\'accord !', 'Ah oui, très bonne idée 💡', 'Je te réponds dès que possible.', 'Haha, exactement !', 'Tu peux me l\'envoyer par fichier ?', 'Intéressant, dis-m\'en plus !', 'Bien reçu 👍', 'On en parle à l\'appel de 14h ?'];
+                const replyText = responses[Math.floor(Math.random() * responses.length)];
+                const rTime = new Date();
+                const rt = rTime.getHours().toString().padStart(2, '0') + ':' + rTime.getMinutes().toString().padStart(2, '0');
+                chat.messages.push({ from: 'them', text: replyText, time: rt });
+                renderMessages(chat.messages);
+                renderChatList(chatData);
+                if (ephemeralMode) {
+                    setTimeout(() => {
+                        chat.messages = chat.messages.filter(m => m !== chat.messages[chat.messages.length - 1]);
+                        renderMessages(chat.messages);
+                        showToast('Message éphémère supprimé', 'info');
+                    }, 5000);
+                }
+            }, 1200 + Math.random() * 1000);
+        }
+
+        function reactToMessage(index, emoji) {
+            const chat = chatData.find(c => c.id === activeChatId);
+            if (!chat.messages[index].reactions) chat.messages[index].reactions = [];
+            if (!chat.messages[index].reactions.includes(emoji)) chat.messages[index].reactions.push(emoji);
+            renderMessages(chat.messages);
+        }
+
+        function replyToMessage(index) {
+            const chat = chatData.find(c => c.id === activeChatId);
+            messageReplyContext = chat.messages[index].text.slice(0, 50);
+            document.getElementById('messageInput').focus();
+            showToast('Réponse activée', 'info');
+        }
+
+        function editMessage(index) {
+            const chat = chatData.find(c => c.id === activeChatId);
+            const newText = prompt('Modifier le message :', chat.messages[index].text);
+            if (newText && newText.trim()) {
+                chat.messages[index].text = newText.trim();
+                chat.messages[index].edited = true;
+                renderMessages(chat.messages);
+                showToast('Message modifié', 'success');
+            }
+        }
+
+        function deleteMessage(index) {
+            const chat = chatData.find(c => c.id === activeChatId);
+            if (confirm('Supprimer ce message ?')) {
+                chat.messages.splice(index, 1);
+                renderMessages(chat.messages);
+                renderChatList(chatData);
+                showToast('Message supprimé', 'success');
+            }
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            if (!picker.classList.contains('visible')) {
+                const emojis = ['😊','😂','❤️','🔥','👍','🎉','😍','🙌','✨','💡','🚀','😎','🤔','😅','👋','💬','📎','🔒','⚡','🌟'];
+                picker.innerHTML = emojis.map(e => `<button onclick="insertEmojiChar('${e}')">${e}</button>`).join('');
+            }
+            picker.classList.toggle('visible');
+        }
+
+        function insertEmojiChar(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('emojiPicker').classList.remove('visible');
+        }
+
+        function attachFile() {
+            const file = prompt('Nom du fichier à joindre (simulation) :', 'document.pdf');
+            if (file) {
+                const chat = chatData.find(c => c.id === activeChatId);
+                const now = new Date();
+                const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                chat.messages.push({ from: 'me', text: `📎 ${file}`, time, read: false });
+                renderMessages(chat.messages);
+                renderChatList(chatData);
+                showToast('Fichier joint (simulation)', 'success');
+            }
+        }
+
+        function toggleRecording() {
+            recording = !recording;
+            const btn = document.getElementById('micBtn');
+            btn.classList.toggle('recording', recording);
+            if (recording) {
+                showToast('Enregistrement en cours...', 'info');
+                setTimeout(() => {
+                    if (recording) {
+                        recording = false;
+                        btn.classList.remove('recording');
+                        const chat = chatData.find(c => c.id === activeChatId);
+                        const now = new Date();
+                        const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                        chat.messages.push({ from: 'me', text: '🎤 Message vocal (0:05)', time, read: false });
+                        renderMessages(chat.messages);
+                        renderChatList(chatData);
+                        showToast('Message vocal envoyé (simulation)', 'success');
+                    }
+                }, 3000);
+            }
+        }
+
+        function filterChats(query) {
+            const q = query.toLowerCase().trim();
+            renderChatList(q ? chatData.filter(c => c.name.toLowerCase().includes(q)) : chatData);
+        }
+
+        function openChatSettings() {
+            document.getElementById('chatSettings').classList.toggle('visible');
+        }
+
+        function applyChatBg(color) {
+            document.getElementById('messagesContainer').style.background = color;
+        }
+
+        function toggleDND() {
+            dndMode = !dndMode;
+            document.getElementById('dndToggle').classList.toggle('on', dndMode);
+            showToast(dndMode ? 'Ne pas déranger activé' : 'Ne pas déranger désactivé', 'info');
+        }
+
+        function toggleEphemeral() {
+            ephemeralMode = !ephemeralMode;
+            document.getElementById('ephemeralToggle').classList.toggle('on', ephemeralMode);
+            showToast(ephemeralMode ? 'Messages éphémères activés (5s)' : 'Messages éphémères désactivés', 'info');
+        }
+
+        function loadChatPreferences() {
+            const bg = localStorage.getItem('zora-chatbg');
+            if (bg) { applyChatBg(bg); document.getElementById('chatBgColor').value = bg; }
+            document.getElementById('chatBgColor').addEventListener('change', e => localStorage.setItem('zora-chatbg', e.target.value));
+        }
+
+        function createGroup() {
+            const name = prompt('Nom du groupe :');
+            if (name) {
+                const newId = chatData.length + 1;
+                chatData.push({ id: newId, name, avatar: name.slice(0,2).toUpperCase(), color: '#f472b6', online: false, messages: [{ from: 'them', text: 'Groupe créé !', time: 'maintenant' }] });
+                renderChatList(chatData);
+                showToast('Groupe créé avec succès', 'success');
+            }
+        }
+
+        function simulateCall() { showToast('Appel vidéo en cours de connexion... (simulation)', 'info'); }
+
+        // ===================== PRIX =====================
+        const pricingPlans = [
+            { name: 'Gratuit', price: '0', unit: '€', features: ['Messages illimités', 'Chiffrement de base', '5 Go de stockage', 'Appels audio 1:1'], featured: false },
+            { name: 'Pro', price: '4,99', unit: '€/mois', features: ['Tout Gratuit +', 'Chiffrement post-quantique', '100 Go de stockage', 'Appels vidéo de groupe (32)', 'Messages éphémères', 'Thèmes personnalisés'], featured: true },
+            { name: 'Business', price: '12,99', unit: '€/mois', features: ['Tout Pro +', 'Stockage illimité', 'Espace collaboratif', 'Administration avancée', 'Support prioritaire 24/7', 'SLA 99,99%'], featured: false }
+        ];
+
+        function renderPricing() {
+            document.getElementById('pricingGrid').innerHTML = pricingPlans.map(p => `
+                <div class="pricing-card ${p.featured ? 'featured' : ''}">
+                    ${p.featured ? '<div class="badge-featured">Populaire</div>' : ''}
+                    <h3>${p.name}</h3>
+                    <div class="price">${p.price}<span>${p.unit}</span></div>
+                    <ul class="pricing-features">${p.features.map(f => `<li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>${f}</li>`).join('')}</ul>
+                    <button class="btn-download" onclick="selectPlan('${p.name}')" style="width:100%;padding:0.7rem;">Choisir ${p.name}</button>
+                </div>`).join('');
+        }
+
+        function selectPlan(name) {
+            showToast(`Vous avez choisi l'offre ${name} !`, 'success');
+            triggerConfetti();
+        }
+
+        // ===================== FEATURES COMPLÈTES =====================
+        const allFeatures = [
+            { icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>', title: 'Chiffrement post-quantique', desc: 'Protection avancée contre les futures menaces.' },
+            { icon: '<path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/>', title: 'Thèmes personnalisables', desc: 'Palette de thèmes sombres et clairs.' },
+            { icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>', title: 'Médias jusqu\'à 2 Go', desc: 'Partagez sans compression.' },
+            { icon: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>', title: 'Multi-appareils', desc: 'Synchronisation transparente.' },
+            { icon: '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>', title: 'Messages éphémères', desc: 'Disparition automatique.' },
+            { icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>', title: 'Vérification 2FA', desc: 'Sécurité renforcée.' },
+            { icon: '<circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 010 20 15.3 15.3 0 010-20z"></path>', title: 'Multi-langue', desc: 'FR, EN et plus à venir.' },
+            { icon: '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>', title: 'Assistant IA', desc: 'Résumés et traduction.' },
+            { icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>', title: 'Paramètres avancés', desc: 'Personnalisation complète.' },
+            { icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>', title: 'Mode focus', desc: 'Masquez les distractions.' },
+            { icon: '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>', title: 'Accessibilité', desc: 'Contraste, police, animations.' },
+            { icon: '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>', title: 'Support 24/7', desc: 'Assistance par chatbot.' }
+        ];
+
+        function renderAllFeatures() {
+            document.getElementById('allFeaturesGrid').innerHTML = allFeatures.map(f => `
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24">${f.icon}</svg></div>
+                    <h3>${f.title}</h3><p>${f.desc}</p>
+                </div>`).join('');
+        }
+
+        // ===================== TÉMOIGNAGES =====================
+        const testimonials = [
+            { text: 'Zora a transformé notre communication d\'équipe. Le chiffrement est un vrai plus.', name: 'Marie L.', role: 'CEO @TechCorp', color: '#e879f9', avatar: 'ML' },
+            { text: 'L\'application la plus rapide que j\'aie jamais utilisée. Les fichiers de 2 Go passent instantanément.', name: 'Thomas B.', role: 'Designer', color: '#38bdf8', avatar: 'TB' },
+            { text: 'Le mode sombre est parfait pour mes yeux. Et l\'interface est vraiment épurée.', name: 'Sofia C.', role: 'Développeuse', color: '#fbbf24', avatar: 'SC' },
+            { text: 'Le support 24/7 est réactif et l\'assistant IA répond à toutes mes questions.', name: 'Julien R.', role: 'Chef de projet', color: '#a78bfa', avatar: 'JR' },
+            { text: 'Enfin une messagerie qui respecte ma vie privée. Le chiffrement post-quantique est rassurant.', name: 'Amina K.', role: 'Journaliste', color: '#4ade80', avatar: 'AK' }
+        ];
+
+        function renderTestimonials() {
+            const track = document.getElementById('testimonialTrack');
+            const doubled = [...testimonials, ...testimonials];
+            track.innerHTML = doubled.map(t => `
+                <div class="testimonial">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">"${t.text}"</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar" style="background:${t.color}">${t.avatar}</div>
+                        <div><div class="name">${t.name}</div><div class="role">${t.role}</div></div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // ===================== FAQ =====================
+        const faqItems = [
+            { q: 'Zora est-elle vraiment gratuite ?', a: 'Oui, l\'offre de base est gratuite et inclut les messages illimités et le chiffrement de base. Les offres Pro et Business ajoutent des fonctionnalités avancées.' },
+            { q: 'Comment fonctionne le chiffrement post-quantique ?', a: 'Nous utilisons les algorithmes Kyber et Dilithium, conçus pour résister aux attaques des ordinateurs quantiques. Chaque message est chiffré avec une clé éphémère.' },
+            { q: 'Puis-je utiliser Zora sur plusieurs appareils ?', a: 'Oui, Zora se synchronise automatiquement entre tous vos appareils (iOS, Android, Windows, macOS, Linux et web).' },
+            { q: 'Quelle est la taille maximale des fichiers ?', a: 'Vous pouvez partager des fichiers jusqu\'à 2 Go sans compression ni perte de qualité.' },
+            { q: 'Comment supprimer mon compte ?', a: 'Rendez-vous dans les paramètres de votre compte et cliquez sur « Supprimer mon compte ». Toutes vos données seront effacées sous 30 jours.' }
+        ];
+
+        function renderFAQ() {
+            document.getElementById('faqContainer').innerHTML = faqItems.map((item, i) => `
+                <div class="faq-item" onclick="toggleFAQ(${i})">
+                    <button class="faq-question">${item.q}</button>
+                    <div class="faq-answer">${item.a}</div>
+                </div>`).join('');
+        }
+
+        function toggleFAQ(i) {
+            const items = document.querySelectorAll('.faq-item');
+            items[i].classList.toggle('open');
+        }
+
+        // ===================== REBUILD DYNAMIQUE =====================
+        function rebuildDynamicContent() {
+            renderPricing();
+            renderAllFeatures();
+            renderTestimonials();
+            renderFAQ();
+            selectPlatform(currentPlatform);
+            updateCalculator();
+        }
+
+        // ===================== INITIALISATION =====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Preloader
+            setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 800);
+
+            // Détection
+            detectedPlatform = detectDevice();
+            currentPlatform = detectedPlatform;
+
+            // Préférences
+            applyPreferences();
+            applyTranslations();
+
+            // Personnaliser bouton header
+            const hb = document.getElementById('headerDownloadBtn');
+            if (detectedPlatform === 'ios') hb.textContent = 'App Store';
+            else if (detectedPlatform === 'android') hb.textContent = 'Google Play';
+            else hb.textContent = `Télécharger (${platformData[detectedPlatform].name})`;
+
+            // Bannière
+            setTimeout(showDeviceBanner, 1200);
+
+            // Rendu dynamique
+            selectPlatform(detectedPlatform);
+            renderPricing();
+            renderAllFeatures();
+            renderTestimonials();
+            renderFAQ();
+            generateQR();
+            updateCalculator();
+            initChatApp();
+
+            // Cookies
+            if (!localStorage.getItem('zora-cookies')) {
+                setTimeout(() => document.getElementById('cookieBanner').classList.add('visible'), 2500);
+            }
+
+            // Stats animées
+            const statsObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) { animateStats(); statsObserver.disconnect(); }
+            }, { threshold: 0.3 });
+            const statsBar = document.getElementById('statsBar');
+            if (statsBar) statsObserver.observe(statsBar);
+
+            // Animations scroll
+            document.querySelectorAll('.feature-card, .pricing-card, .blog-card, .roadmap-item').forEach(el => observer.observe(el));
+
+            // Focus visible pour accessibilité
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') document.body.classList.add('keyboard-nav');
+            });
+
+            // Easter egg Konami
+            let konamiSeq = [];
+            const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            document.addEventListener('keydown', (e) => {
+                konamiSeq.push(e.key);
+                if (konamiSeq.length > konamiCode.length) konamiSeq.shift();
+                if (JSON.stringify(konamiSeq) === JSON.stringify(konamiCode)) {
+                    document.body.style.animation = 'shake 0.5s';
+                    setTimeout(() => document.body.style.animation = '', 500);
+                    showToast('🎉 Easter egg trouvé ! Vous êtes un vrai fan de Zora.', 'success');
+                    triggerConfetti();
+                    konamiSeq = [];
+                }
+            });
+
+            // Raccourci Ctrl+K pour recherche
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    showView('app');
+                    setTimeout(() => document.getElementById('searchInput')?.focus(), 100);
+                }
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) document.getElementById('mobileMenu').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
